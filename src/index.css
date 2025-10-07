@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Ensure dragged items appear on top */
+[data-dnd-draggable-dragging] {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Create a stacking context for the entire app */
+#root {
+  isolation: isolate;
+}
+
+/* Ensure the drag overlay container is above everything */
+#drag-overlay-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* When dragging is active, ensure proper stacking context */
+body.dragging-active .dnd-sortable-dragging {
+  z-index: 9999;
+}
+
+/* Ensure all containers have a lower z-index than dragged items */
+[data-droppable-id] {
+  position: relative;
+  z-index: 1;
+}
