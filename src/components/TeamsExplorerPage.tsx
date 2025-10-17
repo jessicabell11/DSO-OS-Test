@@ -27,8 +27,8 @@ import Sidebar from './Sidebar';
 import AIAssistant from './AIAssistant';
 
 const TeamsExplorerPage: React.FC = () => {
-  const [teams, setTeams] = useState<Team[]>(teamsData);
-  const [filteredTeams, setFilteredTeams] = useState<Team[]>(teamsData);
+  const [teams, setTeams] = useState<Team[]>([...teamsData]);
+  const [filteredTeams, setFilteredTeams] = useState<Team[]>([...teamsData]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'archived'>('all');
   const [isAddingTeam, setIsAddingTeam] = useState(false);
@@ -76,12 +76,25 @@ const TeamsExplorerPage: React.FC = () => {
       businessCapabilities: []
     };
 
-    setTeams(prevTeams => [...prevTeams, newTeam]);
+    // Update both the local state and the imported teamsData array
+    const updatedTeams = [...teams, newTeam];
+    setTeams(updatedTeams);
+    
+    // Update the teamsData array directly so other components can access the new team
+    // This is a workaround since we don't have a proper state management solution
+    teamsData.push(newTeam);
+    
     setNewTeamName('');
     setNewTeamDescription('');
     setIsAddingTeam(false);
     
     showSuccess(`Team "${newTeamName}" created successfully`);
+    
+    // Navigate to the new team's dashboard after a short delay
+    // This gives time for the success message to be seen
+    setTimeout(() => {
+      handleViewTeamDashboard(newTeam.id);
+    }, 500);
   };
 
   const getCapabilityNames = (capabilityIds: string[] = []): string => {
@@ -145,6 +158,7 @@ const TeamsExplorerPage: React.FC = () => {
 
   // Handle navigation to team dashboard
   const handleViewTeamDashboard = (teamId: string) => {
+    // Use navigate to go to the team dashboard
     navigate(`/teams/${teamId}`);
   };
 
