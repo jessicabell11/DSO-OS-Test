@@ -17,9 +17,11 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  Grid
+  Grid,
+  Rocket
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { teamsData } from '../data/teamsData';
 
 interface SidebarProps {
   activeTab: string;
@@ -30,6 +32,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const [collapsed, setCollapsed] = React.useState(false);
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId?: string }>();
+  const [team, setTeam] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    // Find the team data based on the teamId
+    if (teamId) {
+      const foundTeam = teamsData.find(t => t.id === teamId);
+      if (foundTeam) {
+        setTeam(foundTeam);
+      }
+    } else {
+      setTeam(null);
+    }
+  }, [teamId]);
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -68,18 +83,39 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
 
   return (
     <div className={`hidden md:flex flex-col ${collapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative`}>
-      <div className="flex items-center justify-center h-16 border-b border-gray-200">
-        {!collapsed && (
-          <div className="flex items-center">
-            <Activity className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-semibold text-gray-800">Accelerator</span>
-          </div>
-        )}
-        {collapsed && (
-          <Activity className="h-8 w-8 text-blue-600" />
-        )}
-      </div>
-      <div className="flex flex-col flex-1 overflow-y-auto">
+      {/* Team name header */}
+      {team && (
+        <div className="flex items-center h-16 border-b border-gray-200 px-4">
+          {!collapsed ? (
+            <div className="flex items-center">
+              {team.logo ? (
+                <img 
+                  src={team.logo} 
+                  alt={`${team.name} logo`} 
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <Rocket className="h-6 w-6 text-blue-500" />
+              )}
+              <span className="ml-2 text-lg font-medium text-gray-800 truncate">
+                {team.name}
+              </span>
+            </div>
+          ) : (
+            team.logo ? (
+              <img 
+                src={team.logo} 
+                alt={`${team.name} logo`} 
+                className="h-8 w-8 rounded-full object-cover mx-auto"
+              />
+            ) : (
+              <Rocket className="h-6 w-6 text-blue-500 mx-auto" />
+            )
+          )}
+        </div>
+      )}
+      
+      <div className="flex flex-col flex-1 overflow-y-auto pt-4">
         <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) => {
             // Skip items that shouldn't be shown based on context

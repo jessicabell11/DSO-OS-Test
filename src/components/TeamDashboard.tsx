@@ -243,7 +243,7 @@ const TeamDashboard: React.FC = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header toggleSidebar={toggleSidebar} sidebarCollapsed={sidebarCollapsed} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-4">
@@ -261,7 +261,7 @@ const TeamDashboard: React.FC = () => {
                   ) : (
                     <Rocket className="h-7 w-7 mr-2 text-blue-500" />
                   )}
-                  {team.name} Dashboard
+                  {team.name}
                 </h1>
               </div>
               <p className="mt-1 text-sm text-gray-500">
