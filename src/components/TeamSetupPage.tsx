@@ -18,11 +18,16 @@ import {
   Link,
   HelpCircle,
   Globe,
-  FileSymlink
+  FileSymlink,
+  Briefcase,
+  ChevronDown,
+  ChevronUp,
+  Search
 } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
-import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink } from '../types';
+import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability } from '../types';
 import { defaultWorkingAgreement } from '../data/teamWorkingAgreementData';
+import { coreCapabilities, enablingCapabilities, allBusinessCapabilities, getUniqueDomains } from '../data/businessCapabilitiesData';
 import AIAssistant from './AIAssistant';
 import Sidebar from './Sidebar';
 
@@ -47,6 +52,14 @@ const TeamSetupPage: React.FC = () => {
   const [infoLinkUrl, setInfoLinkUrl] = useState('');
   const [infoLinkType, setInfoLinkType] = useState<'sharepoint' | 'wiki' | 'documentation' | 'other'>('sharepoint');
   const [infoLinkDescription, setInfoLinkDescription] = useState('');
+
+  // Business capabilities state
+  const [isCapabilitiesExpanded, setIsCapabilitiesExpanded] = useState(false);
+  const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>(
+    workingAgreement.businessCapabilities || []
+  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCapabilityCategory, setActiveCapabilityCategory] = useState<'core' | 'enabling'>('core');
 
   const DPJ_DOCUMENTATION_URL = "https://bayergroup.sharepoint.com/sites/026557/SitePages/Technology%20%26%20Engineering/Engineering%20Enablement%20site/openproject_techdoc.aspx?siteid={5CD3A45F-1F48-4F51-A74C-D96928B44568}&webid={E522E984-78F4-4F8F-887D-9244724C8A62}&uniqueid={86603172-74D0-43DA-92FE-6488ADE20191}";
 
@@ -248,6 +261,59 @@ const TeamSetupPage: React.FC = () => {
     }
   };
 
+  // Business capabilities handlers
+  const handleCapabilityToggle = (capabilityId: string) => {
+    setSelectedCapabilities(prev => {
+      const isSelected = prev.includes(capabilityId);
+      const newSelected = isSelected
+        ? prev.filter(id => id !== capabilityId)
+        : [...prev, capabilityId];
+      
+      // Update working agreement with new selected capabilities
+      setWorkingAgreement(prevAgreement => ({
+        ...prevAgreement,
+        businessCapabilities: newSelected,
+        lastUpdated: new Date().toISOString()
+      }));
+      
+      return newSelected;
+    });
+  };
+
+  const filteredCapabilities = (category: 'core' | 'enabling') => {
+    const capabilities = category === 'core' ? coreCapabilities : enablingCapabilities;
+    
+    if (!searchQuery) {
+      return capabilities;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return capabilities.filter(
+      cap => cap.name.toLowerCase().includes(query) || 
+             cap.domain.toLowerCase().includes(query) ||
+             (cap.description && cap.description.toLowerCase().includes(query))
+    );
+  };
+
+  const getSelectedCapabilitiesCount = () => {
+    return selectedCapabilities.length;
+  };
+
+  const getCapabilityById = (id: string) => {
+    return allBusinessCapabilities.find(cap => cap.id === id);
+  };
+
+  const getCapabilitiesByDomain = (capabilities: BusinessCapability[]) => {
+    const domains = getUniqueDomains(activeCapabilityCategory);
+    const result: Record<string, BusinessCapability[]> = {};
+    
+    domains.forEach(domain => {
+      result[domain] = capabilities.filter(cap => cap.domain === domain);
+    });
+    
+    return result;
+  };
+
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setShowSuccessMessage(true);
@@ -433,6 +499,153 @@ const TeamSetupPage: React.FC = () => {
                 <div className="mt-3 flex items-center text-sm text-gray-500">
                   <Clock className="h-4 w-4 mr-1" />
                   <span>Last updated: {formatDate(workingAgreement.lastUpdated)}</span>
+                </div>
+
+                {/* Business Capabilities Section */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      <Briefcase className="h-4 w-4 mr-1 text-blue-500" />
+                      <h3 className="text-sm font-medium text-gray-900">Business Capabilities</h3>
+                      <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                        {getSelectedCapabilitiesCount()} selected
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setIsCapabilitiesExpanded(!isCapabilitiesExpanded)}
+                      className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                    >
+                      {isCapabilitiesExpanded ? (
+                        <>
+                          <ChevronUp size={16} className="mr-1" />
+                          Collapse
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown size={16} className="mr-1" />
+                          Expand
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {isCapabilitiesExpanded ? (
+                    <div className="mt-3 space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="relative flex-1">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-4 w-4 text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Search capabilities..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="flex rounded-md shadow-sm">
+                          <button
+                            onClick={() => setActiveCapabilityCategory('core')}
+                            className={`px-4 py-2 text-sm font-medium rounded-l-md ${
+                              activeCapabilityCategory === 'core'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            Core
+                          </button>
+                          <button
+                            onClick={() => setActiveCapabilityCategory('enabling')}
+                            className={`px-4 py-2 text-sm font-medium rounded-r-md ${
+                              activeCapabilityCategory === 'enabling'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            Enabling
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-md p-4 max-h-96 overflow-y-auto">
+                        {Object.entries(getCapabilitiesByDomain(filteredCapabilities(activeCapabilityCategory))).map(([domain, capabilities]) => (
+                          <div key={domain} className="mb-4">
+                            <h4 className="text-sm font-medium text-gray-900 mb-2">{domain}</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {capabilities.map((capability) => (
+                                <div
+                                  key={capability.id}
+                                  className={`p-3 rounded-md border ${
+                                    selectedCapabilities.includes(capability.id)
+                                      ? 'border-blue-500 bg-blue-50'
+                                      : 'border-gray-200 bg-white'
+                                  } hover:border-blue-300 cursor-pointer transition-colors`}
+                                  onClick={() => handleCapabilityToggle(capability.id)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium">{capability.name}</span>
+                                    <div className={`h-4 w-4 rounded-full flex items-center justify-center ${
+                                      selectedCapabilities.includes(capability.id)
+                                        ? 'bg-blue-500 text-white'
+                                        : 'border border-gray-300'
+                                    }`}>
+                                      {selectedCapabilities.includes(capability.id) && (
+                                        <CheckCircle className="h-3 w-3" />
+                                      )}
+                                    </div>
+                                  </div>
+                                  {capability.description && (
+                                    <p className="text-xs text-gray-500 mt-1">{capability.description}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+
+                        {filteredCapabilities(activeCapabilityCategory).length === 0 && (
+                          <div className="text-center py-8">
+                            <p className="text-gray-500">No capabilities found matching your search.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2">
+                      {selectedCapabilities.length > 0 ? (
+                        <div className="bg-gray-50 rounded-md p-3">
+                          <div className="flex flex-wrap gap-2">
+                            {selectedCapabilities.map(capId => {
+                              const capability = getCapabilityById(capId);
+                              return capability ? (
+                                <div 
+                                  key={capId}
+                                  className="bg-white px-3 py-1 rounded-full border border-gray-200 text-sm flex items-center"
+                                >
+                                  <span>{capability.name}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCapabilityToggle(capId);
+                                    }}
+                                    className="ml-2 text-gray-400 hover:text-red-500"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 bg-gray-50 rounded-md">
+                          <p className="text-sm text-gray-500">No business capabilities selected</p>
+                          <p className="text-xs text-gray-400 mt-1">Click "Expand" to select the capabilities your team is responsible for</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Backlog Management Link Section */}
@@ -865,6 +1078,42 @@ const TeamSetupPage: React.FC = () => {
                       }`}>
                         {workingAgreement.status.charAt(0).toUpperCase() + workingAgreement.status.slice(1)}
                       </span>
+                    </div>
+                    
+                    {/* Business Capabilities in Preview */}
+                    <div className="mb-6">
+                      <h2 className="text-lg font-medium text-gray-900 mb-3">Business Capabilities</h2>
+                      {selectedCapabilities.length > 0 ? (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {selectedCapabilities.map(capId => {
+                              const capability = getCapabilityById(capId);
+                              return capability ? (
+                                <div key={capId} className="bg-white p-3 rounded-md border border-gray-200">
+                                  <div className="flex items-center">
+                                    <Briefcase className="h-4 w-4 text-blue-500 mr-2" />
+                                    <h3 className="text-sm font-medium">{capability.name}</h3>
+                                  </div>
+                                  <div className="mt-1 flex items-center">
+                                    <span className="text-xs text-gray-500">{capability.domain}</span>
+                                    <span className="mx-1 text-gray-300">•</span>
+                                    <span className={`text-xs ${
+                                      capability.category === 'core' ? 'text-blue-600' : 'text-green-600'
+                                    }`}>
+                                      {capability.category.charAt(0).toUpperCase() + capability.category.slice(1)}
+                                    </span>
+                                  </div>
+                                  {capability.description && (
+                                    <p className="mt-2 text-xs text-gray-600">{capability.description}</p>
+                                  )}
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">No business capabilities selected.</p>
+                      )}
                     </div>
                     
                     {/* Team Links in Preview */}

@@ -106,6 +106,16 @@ export interface WorkingAgreementSection {
   isEditing?: boolean;
 }
 
+// New type for business capability
+export interface BusinessCapability {
+  id: string;
+  name: string;
+  category: 'core' | 'enabling';
+  domain: string;
+  description?: string;
+  selected?: boolean;
+}
+
 // New type for team working agreement
 export interface TeamWorkingAgreement {
   id: string;
@@ -125,4 +135,5 @@ export interface TeamWorkingAgreement {
     type: 'digital-product-journey' | 'azure-devops' | 'aha' | 'other';
   };
   teamInfoLinks?: TeamInfoLink[];
+  businessCapabilities?: string[]; // Array of selected capability IDs
 }

@@ -64,5 +64,11 @@ export const defaultWorkingAgreement: TeamWorkingAgreement = {
       type: 'wiki',
       description: 'Engineering best practices and guidelines'
     }
+  ],
+  businessCapabilities: [
+    'develop-product-development',
+    'develop-innovation-management',
+    'enabling-digital-transformation',
+    'enabling-technology-innovation'
   ]
 };
