@@ -89,6 +89,15 @@ export interface TeamMember {
   projects: string[];
 }
 
+// New type for team information link
+export interface TeamInfoLink {
+  id: string;
+  title: string;
+  url: string;
+  type: 'sharepoint' | 'wiki' | 'documentation' | 'other';
+  description?: string;
+}
+
 // New type for working agreement section
 export interface WorkingAgreementSection {
   id: string;
@@ -115,4 +124,5 @@ export interface TeamWorkingAgreement {
     url: string;
     type: 'digital-product-journey' | 'azure-devops' | 'aha' | 'other';
   };
+  teamInfoLinks?: TeamInfoLink[];
 }

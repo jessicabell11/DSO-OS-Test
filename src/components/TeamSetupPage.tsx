@@ -16,10 +16,12 @@ import {
   PlusCircle,
   Trash,
   Link,
-  HelpCircle
+  HelpCircle,
+  Globe,
+  FileSymlink
 } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
-import { TeamWorkingAgreement, WorkingAgreementSection } from '../types';
+import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink } from '../types';
 import { defaultWorkingAgreement } from '../data/teamWorkingAgreementData';
 import AIAssistant from './AIAssistant';
 import Sidebar from './Sidebar';
@@ -37,6 +39,14 @@ const TeamSetupPage: React.FC = () => {
   const [isBacklogLinkEditing, setIsBacklogLinkEditing] = useState(false);
   const [backlogUrl, setBacklogUrl] = useState(workingAgreement.backlogLink?.url || '');
   const [backlogType, setBacklogType] = useState(workingAgreement.backlogLink?.type || 'digital-product-journey');
+  
+  // Team info links state
+  const [isAddingInfoLink, setIsAddingInfoLink] = useState(false);
+  const [editingInfoLinkId, setEditingInfoLinkId] = useState<string | null>(null);
+  const [infoLinkTitle, setInfoLinkTitle] = useState('');
+  const [infoLinkUrl, setInfoLinkUrl] = useState('');
+  const [infoLinkType, setInfoLinkType] = useState<'sharepoint' | 'wiki' | 'documentation' | 'other'>('sharepoint');
+  const [infoLinkDescription, setInfoLinkDescription] = useState('');
 
   const DPJ_DOCUMENTATION_URL = "https://bayergroup.sharepoint.com/sites/026557/SitePages/Technology%20%26%20Engineering/Engineering%20Enablement%20site/openproject_techdoc.aspx?siteid={5CD3A45F-1F48-4F51-A74C-D96928B44568}&webid={E522E984-78F4-4F8F-887D-9244724C8A62}&uniqueid={86603172-74D0-43DA-92FE-6488ADE20191}";
 
@@ -162,6 +172,82 @@ const TeamSetupPage: React.FC = () => {
     showSuccess('Working agreement published successfully');
   };
 
+  // Team info links handlers
+  const handleAddInfoLink = () => {
+    setIsAddingInfoLink(true);
+    setInfoLinkTitle('');
+    setInfoLinkUrl('');
+    setInfoLinkType('sharepoint');
+    setInfoLinkDescription('');
+  };
+
+  const handleEditInfoLink = (link: TeamInfoLink) => {
+    setEditingInfoLinkId(link.id);
+    setInfoLinkTitle(link.title);
+    setInfoLinkUrl(link.url);
+    setInfoLinkType(link.type);
+    setInfoLinkDescription(link.description || '');
+  };
+
+  const handleSaveInfoLink = () => {
+    if (!infoLinkTitle || !infoLinkUrl) {
+      alert('Title and URL are required');
+      return;
+    }
+
+    if (isAddingInfoLink) {
+      const newLink: TeamInfoLink = {
+        id: `link-${Date.now()}`,
+        title: infoLinkTitle,
+        url: infoLinkUrl,
+        type: infoLinkType,
+        description: infoLinkDescription || undefined
+      };
+
+      setWorkingAgreement(prev => ({
+        ...prev,
+        teamInfoLinks: [...(prev.teamInfoLinks || []), newLink],
+        lastUpdated: new Date().toISOString()
+      }));
+      setIsAddingInfoLink(false);
+      showSuccess('Team information link added successfully');
+    } else if (editingInfoLinkId) {
+      setWorkingAgreement(prev => ({
+        ...prev,
+        teamInfoLinks: (prev.teamInfoLinks || []).map(link => 
+          link.id === editingInfoLinkId 
+            ? { 
+                ...link, 
+                title: infoLinkTitle, 
+                url: infoLinkUrl, 
+                type: infoLinkType,
+                description: infoLinkDescription || undefined
+              } 
+            : link
+        ),
+        lastUpdated: new Date().toISOString()
+      }));
+      setEditingInfoLinkId(null);
+      showSuccess('Team information link updated successfully');
+    }
+  };
+
+  const handleCancelInfoLink = () => {
+    setIsAddingInfoLink(false);
+    setEditingInfoLinkId(null);
+  };
+
+  const handleDeleteInfoLink = (linkId: string) => {
+    if (confirm('Are you sure you want to delete this link?')) {
+      setWorkingAgreement(prev => ({
+        ...prev,
+        teamInfoLinks: (prev.teamInfoLinks || []).filter(link => link.id !== linkId),
+        lastUpdated: new Date().toISOString()
+      }));
+      showSuccess('Team information link deleted successfully');
+    }
+  };
+
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setShowSuccessMessage(true);
@@ -197,6 +283,36 @@ const TeamSetupPage: React.FC = () => {
         return 'Other';
       default:
         return type;
+    }
+  };
+
+  const getInfoLinkTypeLabel = (type: string) => {
+    switch (type) {
+      case 'sharepoint':
+        return 'SharePoint';
+      case 'wiki':
+        return 'Wiki';
+      case 'documentation':
+        return 'Documentation';
+      case 'other':
+        return 'Other';
+      default:
+        return type;
+    }
+  };
+
+  const getInfoLinkTypeIcon = (type: string) => {
+    switch (type) {
+      case 'sharepoint':
+        return <FileSymlink className="h-4 w-4 text-blue-500" />;
+      case 'wiki':
+        return <FileText className="h-4 w-4 text-purple-500" />;
+      case 'documentation':
+        return <FileText className="h-4 w-4 text-green-500" />;
+      case 'other':
+        return <Globe className="h-4 w-4 text-gray-500" />;
+      default:
+        return <Link className="h-4 w-4 text-blue-500" />;
     }
   };
 
@@ -427,7 +543,7 @@ const TeamSetupPage: React.FC = () => {
                               <div>
                                 <h4 className="text-sm font-medium text-blue-800">Need a backlog management tool?</h4>
                                 <p className="mt-1 text-sm text-blue-700">
-                                  Get started with Digital Product Journey, our recommended tool for backlog management.
+                                  Get started with Digital Product Journey, our recommended tool for teams to plan and manage their work.
                                 </p>
                                 <a 
                                   href={DPJ_DOCUMENTATION_URL}
@@ -441,6 +557,157 @@ const TeamSetupPage: React.FC = () => {
                               </div>
                             </div>
                           </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Team Information Links Section */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      <FileSymlink className="h-4 w-4 mr-1 text-blue-500" />
+                      <h3 className="text-sm font-medium text-gray-900">Team Information Links</h3>
+                    </div>
+                    {!isAddingInfoLink && !editingInfoLinkId && (
+                      <button
+                        onClick={handleAddInfoLink}
+                        className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 hover:text-blue-800"
+                      >
+                        <PlusCircle size={12} className="mr-1" />
+                        Add Link
+                      </button>
+                    )}
+                  </div>
+
+                  {(isAddingInfoLink || editingInfoLinkId) ? (
+                    <div className="bg-gray-50 p-3 rounded-md space-y-3">
+                      <div>
+                        <label htmlFor="info-link-title" className="block text-xs font-medium text-gray-700">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          id="info-link-title"
+                          value={infoLinkTitle}
+                          onChange={(e) => setInfoLinkTitle(e.target.value)}
+                          placeholder="Team SharePoint"
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="info-link-url" className="block text-xs font-medium text-gray-700">
+                          URL
+                        </label>
+                        <input
+                          type="url"
+                          id="info-link-url"
+                          value={infoLinkUrl}
+                          onChange={(e) => setInfoLinkUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="info-link-type" className="block text-xs font-medium text-gray-700">
+                          Type
+                        </label>
+                        <select
+                          id="info-link-type"
+                          value={infoLinkType}
+                          onChange={(e) => setInfoLinkType(e.target.value as any)}
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                          <option value="sharepoint">SharePoint</option>
+                          <option value="wiki">Wiki</option>
+                          <option value="documentation">Documentation</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="info-link-description" className="block text-xs font-medium text-gray-700">
+                          Description (optional)
+                        </label>
+                        <textarea
+                          id="info-link-description"
+                          value={infoLinkDescription}
+                          onChange={(e) => setInfoLinkDescription(e.target.value)}
+                          rows={2}
+                          placeholder="Brief description of this resource"
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleSaveInfoLink}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <Save size={14} className="mr-1" />
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelInfoLink}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <X size={14} className="mr-1" />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {workingAgreement.teamInfoLinks && workingAgreement.teamInfoLinks.length > 0 ? (
+                        <div className="space-y-3">
+                          {workingAgreement.teamInfoLinks.map((link) => (
+                            <div key={link.id} className="bg-gray-50 p-3 rounded-md">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  {getInfoLinkTypeIcon(link.type)}
+                                  <h4 className="ml-2 text-sm font-medium text-gray-900">{link.title}</h4>
+                                  <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                                    {getInfoLinkTypeLabel(link.type)}
+                                  </span>
+                                </div>
+                                <div className="flex space-x-1">
+                                  <button
+                                    onClick={() => handleEditInfoLink(link)}
+                                    className="p-1 text-blue-600 hover:text-blue-800"
+                                    title="Edit link"
+                                  >
+                                    <Edit3 size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteInfoLink(link.id)}
+                                    className="p-1 text-red-600 hover:text-red-800"
+                                    title="Delete link"
+                                  >
+                                    <Trash size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                              {link.description && (
+                                <p className="mt-1 text-xs text-gray-500">{link.description}</p>
+                              )}
+                              <a
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-1 block text-sm text-blue-600 hover:text-blue-800 hover:underline truncate"
+                              >
+                                {link.url}
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 bg-gray-50 rounded-md">
+                          <p className="text-sm text-gray-500">No team information links added yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Add links to your team's SharePoint, wiki, or other important resources</p>
                         </div>
                       )}
                     </div>
@@ -600,40 +867,69 @@ const TeamSetupPage: React.FC = () => {
                       </span>
                     </div>
                     
-                    {/* Backlog Link in Preview */}
-                    {workingAgreement.backlogLink && workingAgreement.backlogLink.url ? (
-                      <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    {/* Team Links in Preview */}
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Backlog Link in Preview */}
+                      <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                         <div className="flex items-center mb-2">
                           <Link className="h-4 w-4 mr-1 text-blue-500" />
                           <h3 className="text-sm font-medium text-gray-900">Backlog Management</h3>
                         </div>
-                        <div className="text-sm">
-                          <div className="flex items-center">
-                            <span className="font-medium">Tool:</span>
-                            <span className="ml-2">{getBacklogTypeLabel(workingAgreement.backlogLink.type)}</span>
+                        {workingAgreement.backlogLink && workingAgreement.backlogLink.url ? (
+                          <div className="text-sm">
+                            <div className="flex items-center">
+                              <span className="font-medium">Tool:</span>
+                              <span className="ml-2">{getBacklogTypeLabel(workingAgreement.backlogLink.type)}</span>
+                            </div>
+                            <div className="flex items-center mt-1">
+                              <span className="font-medium">URL:</span>
+                              <a 
+                                href={workingAgreement.backlogLink.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="ml-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-md"
+                              >
+                                {workingAgreement.backlogLink.url}
+                              </a>
+                            </div>
                           </div>
-                          <div className="flex items-center mt-1">
-                            <span className="font-medium">URL:</span>
-                            <a 
-                              href={workingAgreement.backlogLink.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="ml-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-md"
-                            >
-                              {workingAgreement.backlogLink.url}
-                            </a>
-                          </div>
-                        </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No backlog link configured</p>
+                        )}
                       </div>
-                    ) : (
-                      <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+
+                      {/* Team Info Links in Preview */}
+                      <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                         <div className="flex items-center mb-2">
-                          <Link className="h-4 w-4 mr-1 text-blue-500" />
-                          <h3 className="text-sm font-medium text-gray-900">Backlog Management</h3>
+                          <FileSymlink className="h-4 w-4 mr-1 text-blue-500" />
+                          <h3 className="text-sm font-medium text-gray-900">Team Information</h3>
                         </div>
-                        <p className="text-sm text-gray-500">No backlog link configured</p>
+                        {workingAgreement.teamInfoLinks && workingAgreement.teamInfoLinks.length > 0 ? (
+                          <div className="space-y-2">
+                            {workingAgreement.teamInfoLinks.map((link) => (
+                              <div key={link.id} className="text-sm">
+                                <div className="flex items-center">
+                                  {getInfoLinkTypeIcon(link.type)}
+                                  <a 
+                                    href={link.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="ml-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-md"
+                                  >
+                                    {link.title}
+                                  </a>
+                                </div>
+                                {link.description && (
+                                  <p className="ml-6 text-xs text-gray-500 mt-0.5">{link.description}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No team information links configured</p>
+                        )}
                       </div>
-                    )}
+                    </div>
                     
                     <div className="space-y-6">
                       {workingAgreement.sections.map((section) => (

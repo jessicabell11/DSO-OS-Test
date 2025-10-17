@@ -8,22 +8,22 @@ export const defaultWorkingAgreement: TeamWorkingAgreement = {
     {
       id: 'section-1',
       title: 'Communication',
-      content: 'We use Slack for day-to-day communication. Important decisions are documented in Confluence. We have daily standups at 10:00 AM.\n\nWe respect each other\'s focus time and try to batch non-urgent questions.'
+      content: 'We use Slack for daily communication and Microsoft Teams for video calls. We have a daily standup at 10:00 AM. Important decisions are documented in Confluence.'
     },
     {
       id: 'section-2',
-      title: 'Meetings',
-      content: 'We keep meetings focused and on-topic. All meetings have an agenda shared beforehand.\n\nWe start and end on time. If a meeting is no longer providing value, we\'re not afraid to end early.'
+      title: 'Working Hours',
+      content: 'Core hours are 10:00 AM - 3:00 PM. Team members are expected to be available during these hours for collaboration. Outside of core hours, team members can work flexibly.'
     },
     {
       id: 'section-3',
-      title: 'Development Process',
-      content: 'We follow trunk-based development. PRs should be small and focused.\n\nCode reviews are done within 24 hours. At least one approval is required before merging.\n\nWe write tests for all new features and bug fixes.'
+      title: 'Development Practices',
+      content: 'We follow trunk-based development. Pull requests require at least one approval. We use automated testing and CI/CD pipelines. Code quality is maintained through regular refactoring and code reviews.'
     },
     {
       id: 'section-4',
-      title: 'On-Call Responsibilities',
-      content: 'We rotate on-call duties weekly. Handoffs happen every Monday at 10:00 AM.\n\nThe on-call person is responsible for triaging production issues and escalating when necessary.'
+      title: 'Meetings',
+      content: 'All meetings must have an agenda. We respect start and end times. Action items are documented and assigned. We have a no-laptop policy for focused discussions.'
     }
   ],
   status: 'draft',
@@ -49,8 +49,20 @@ export const defaultWorkingAgreement: TeamWorkingAgreement = {
       approvedAt: new Date().toISOString()
     }
   ],
-  backlogLink: {
-    url: '',
-    type: 'digital-product-journey'
-  }
+  teamInfoLinks: [
+    {
+      id: 'link-1',
+      title: 'Team SharePoint',
+      url: 'https://bayergroup.sharepoint.com/sites/Accelerator821/SitePages/Accelerator.aspx',
+      type: 'sharepoint',
+      description: 'Our team SharePoint site with documentation and resources'
+    },
+    {
+      id: 'link-2',
+      title: 'Engineering Wiki',
+      url: 'https://contoso.wiki.com/Engineering',
+      type: 'wiki',
+      description: 'Engineering best practices and guidelines'
+    }
+  ]
 };
