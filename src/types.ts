@@ -67,3 +67,52 @@ export interface RelatedTeam {
   lastCollaboration: string;
   upcomingMilestones: string[];
 }
+
+// New type for team member
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+  email: string;
+  phone: string;
+  location: string;
+  department: string;
+  skills: string[];
+  availability: 'available' | 'busy' | 'away' | 'offline';
+  bio: string;
+  socialLinks: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+  };
+  projects: string[];
+}
+
+// New type for working agreement section
+export interface WorkingAgreementSection {
+  id: string;
+  title: string;
+  content: string;
+  isEditing?: boolean;
+}
+
+// New type for team working agreement
+export interface TeamWorkingAgreement {
+  id: string;
+  title: string;
+  description: string;
+  sections: WorkingAgreementSection[];
+  status: 'draft' | 'active' | 'archived';
+  version: number;
+  lastUpdated: string;
+  approvals: {
+    memberId: string;
+    approved: boolean;
+    approvedAt?: string;
+  }[];
+  backlogLink?: {
+    url: string;
+    type: 'digital-product-journey' | 'azure-devops' | 'aha' | 'other';
+  };
+}

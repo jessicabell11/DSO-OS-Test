@@ -14,9 +14,11 @@ import {
   ArrowLeft,
   Eye,
   PlusCircle,
-  Trash
+  Trash,
+  Link,
+  HelpCircle
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { TeamWorkingAgreement, WorkingAgreementSection } from '../types';
 import { defaultWorkingAgreement } from '../data/teamWorkingAgreementData';
 import AIAssistant from './AIAssistant';
@@ -32,6 +34,11 @@ const TeamSetupPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'approvals'>('editor');
   const [sidebarActiveTab, setSidebarActiveTab] = useState('team-setup');
+  const [isBacklogLinkEditing, setIsBacklogLinkEditing] = useState(false);
+  const [backlogUrl, setBacklogUrl] = useState(workingAgreement.backlogLink?.url || '');
+  const [backlogType, setBacklogType] = useState(workingAgreement.backlogLink?.type || 'digital-product-journey');
+
+  const DPJ_DOCUMENTATION_URL = "https://bayergroup.sharepoint.com/sites/026557/SitePages/Technology%20%26%20Engineering/Engineering%20Enablement%20site/openproject_techdoc.aspx?siteid={5CD3A45F-1F48-4F51-A74C-D96928B44568}&webid={E522E984-78F4-4F8F-887D-9244724C8A62}&uniqueid={86603172-74D0-43DA-92FE-6488ADE20191}";
 
   const handleSectionEdit = (sectionId: string) => {
     setWorkingAgreement(prev => ({
@@ -81,6 +88,19 @@ const TeamSetupPage: React.FC = () => {
     }));
     setIsDescriptionEditing(false);
     showSuccess('Description updated successfully');
+  };
+
+  const handleBacklogLinkSave = () => {
+    setWorkingAgreement(prev => ({
+      ...prev,
+      backlogLink: {
+        url: backlogUrl,
+        type: backlogType as 'digital-product-journey' | 'azure-devops' | 'aha' | 'other'
+      },
+      lastUpdated: new Date().toISOString()
+    }));
+    setIsBacklogLinkEditing(false);
+    showSuccess('Backlog link updated successfully');
   };
 
   const handleAddSection = () => {
@@ -165,6 +185,21 @@ const TeamSetupPage: React.FC = () => {
     (workingAgreement.approvals.filter(a => a.approved).length / workingAgreement.approvals.length) * 100
   );
 
+  const getBacklogTypeLabel = (type: string) => {
+    switch (type) {
+      case 'digital-product-journey':
+        return 'Digital Product Journey';
+      case 'azure-devops':
+        return 'Azure DevOps';
+      case 'aha':
+        return 'Aha!';
+      case 'other':
+        return 'Other';
+      default:
+        return type;
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={sidebarActiveTab} setActiveTab={setSidebarActiveTab} />
@@ -172,9 +207,9 @@ const TeamSetupPage: React.FC = () => {
         <header className="bg-white shadow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <div className="flex items-center">
-              <Link to="/" className="text-blue-600 hover:text-blue-800 mr-4">
+              <RouterLink to="/" className="text-blue-600 hover:text-blue-800 mr-4">
                 <ArrowLeft size={20} />
-              </Link>
+              </RouterLink>
               <h1 className="text-xl font-semibold text-gray-900 flex items-center">
                 <Users className="h-6 w-6 mr-2 text-blue-500" />
                 Team Setup
@@ -282,6 +317,134 @@ const TeamSetupPage: React.FC = () => {
                 <div className="mt-3 flex items-center text-sm text-gray-500">
                   <Clock className="h-4 w-4 mr-1" />
                   <span>Last updated: {formatDate(workingAgreement.lastUpdated)}</span>
+                </div>
+
+                {/* Backlog Management Link Section */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center mb-2">
+                    <Link className="h-4 w-4 mr-1 text-blue-500" />
+                    <h3 className="text-sm font-medium text-gray-900">Backlog Management</h3>
+                  </div>
+                  
+                  {isBacklogLinkEditing ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label htmlFor="backlog-url" className="block text-xs font-medium text-gray-700">
+                          Backlog URL
+                        </label>
+                        <input
+                          type="url"
+                          id="backlog-url"
+                          value={backlogUrl}
+                          onChange={(e) => setBacklogUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="backlog-type" className="block text-xs font-medium text-gray-700">
+                          Tool
+                        </label>
+                        <select
+                          id="backlog-type"
+                          value={backlogType}
+                          onChange={(e) => setBacklogType(e.target.value)}
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                          <option value="digital-product-journey">Digital Product Journey</option>
+                          <option value="azure-devops">Azure DevOps</option>
+                          <option value="aha">Aha!</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleBacklogLinkSave}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <Save size={14} className="mr-1" />
+                          Save
+                        </button>
+                        <button
+                          onClick={() => {
+                            setBacklogUrl(workingAgreement.backlogLink?.url || '');
+                            setBacklogType(workingAgreement.backlogLink?.type || 'digital-product-journey');
+                            setIsBacklogLinkEditing(false);
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <X size={14} className="mr-1" />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {workingAgreement.backlogLink && workingAgreement.backlogLink.url ? (
+                        <div className="text-sm">
+                          <div className="flex items-center">
+                            <span className="font-medium">Tool:</span>
+                            <span className="ml-2">{getBacklogTypeLabel(workingAgreement.backlogLink.type)}</span>
+                          </div>
+                          <div className="flex items-center mt-1">
+                            <span className="font-medium">URL:</span>
+                            <a 
+                              href={workingAgreement.backlogLink.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="ml-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-md"
+                            >
+                              {workingAgreement.backlogLink.url}
+                            </a>
+                          </div>
+                          <button
+                            onClick={() => setIsBacklogLinkEditing(true)}
+                            className="mt-2 inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 hover:text-blue-800"
+                          >
+                            <Edit3 size={12} className="mr-1" />
+                            Edit
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center">
+                            <span className="text-sm text-gray-500">No backlog link configured</span>
+                            <button
+                              onClick={() => setIsBacklogLinkEditing(true)}
+                              className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 hover:text-blue-800"
+                            >
+                              <PlusCircle size={12} className="mr-1" />
+                              Add Link
+                            </button>
+                          </div>
+                          
+                          {/* Digital Product Journey Documentation Link */}
+                          <div className="bg-blue-50 border border-blue-100 rounded-md p-3">
+                            <div className="flex items-start">
+                              <HelpCircle className="h-5 w-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <div>
+                                <h4 className="text-sm font-medium text-blue-800">Need a backlog management tool?</h4>
+                                <p className="mt-1 text-sm text-blue-700">
+                                  Get started with Digital Product Journey, our recommended tool for backlog management.
+                                </p>
+                                <a 
+                                  href={DPJ_DOCUMENTATION_URL}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-2 inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  <Link size={12} className="mr-1" />
+                                  View Digital Product Journey documentation
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -436,6 +599,41 @@ const TeamSetupPage: React.FC = () => {
                         {workingAgreement.status.charAt(0).toUpperCase() + workingAgreement.status.slice(1)}
                       </span>
                     </div>
+                    
+                    {/* Backlog Link in Preview */}
+                    {workingAgreement.backlogLink && workingAgreement.backlogLink.url ? (
+                      <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="flex items-center mb-2">
+                          <Link className="h-4 w-4 mr-1 text-blue-500" />
+                          <h3 className="text-sm font-medium text-gray-900">Backlog Management</h3>
+                        </div>
+                        <div className="text-sm">
+                          <div className="flex items-center">
+                            <span className="font-medium">Tool:</span>
+                            <span className="ml-2">{getBacklogTypeLabel(workingAgreement.backlogLink.type)}</span>
+                          </div>
+                          <div className="flex items-center mt-1">
+                            <span className="font-medium">URL:</span>
+                            <a 
+                              href={workingAgreement.backlogLink.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="ml-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-md"
+                            >
+                              {workingAgreement.backlogLink.url}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="flex items-center mb-2">
+                          <Link className="h-4 w-4 mr-1 text-blue-500" />
+                          <h3 className="text-sm font-medium text-gray-900">Backlog Management</h3>
+                        </div>
+                        <p className="text-sm text-gray-500">No backlog link configured</p>
+                      </div>
+                    )}
                     
                     <div className="space-y-6">
                       {workingAgreement.sections.map((section) => (
