@@ -24,17 +24,49 @@ import {
   ChevronUp,
   Search
 } from 'lucide-react';
-import { Link as RouterLink } from 'react-router-dom';
-import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability } from '../types';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability, Team } from '../types';
 import { defaultWorkingAgreement } from '../data/teamWorkingAgreementData';
 import { coreCapabilities, enablingCapabilities, allBusinessCapabilities, getUniqueDomains } from '../data/businessCapabilitiesData';
+import { teamsData } from '../data/teamsData';
 import AIAssistant from './AIAssistant';
 import Sidebar from './Sidebar';
 
 const TeamSetupPage: React.FC = () => {
-  const [workingAgreement, setWorkingAgreement] = useState<TeamWorkingAgreement>(defaultWorkingAgreement);
-  const [title, setTitle] = useState(defaultWorkingAgreement.title);
-  const [description, setDescription] = useState(defaultWorkingAgreement.description);
+  const { teamId } = useParams<{ teamId: string }>();
+  const [team, setTeam] = useState<Team | null>(null);
+  const [workingAgreement, setWorkingAgreement] = useState<TeamWorkingAgreement>({
+    ...defaultWorkingAgreement,
+    id: `wa-${Date.now()}`,
+    title: 'Team Working Agreement',
+    description: 'This document outlines how our team works together, our shared values, and our processes.',
+    sections: [
+      {
+        id: 'section-1',
+        title: 'Communication',
+        content: 'Define your team communication channels and practices here.'
+      },
+      {
+        id: 'section-2',
+        title: 'Working Hours',
+        content: 'Specify your team\'s working hours and availability expectations.'
+      },
+      {
+        id: 'section-3',
+        title: 'Development Practices',
+        content: 'Document your team\'s development practices and standards.'
+      }
+    ],
+    status: 'draft',
+    version: 1.0,
+    lastUpdated: new Date().toISOString(),
+    approvals: [],
+    teamInfoLinks: [],
+    businessCapabilities: []
+  });
+  
+  const [title, setTitle] = useState(workingAgreement.title);
+  const [description, setDescription] = useState(workingAgreement.description);
   const [isTitleEditing, setIsTitleEditing] = useState(false);
   const [isDescriptionEditing, setIsDescriptionEditing] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -42,8 +74,8 @@ const TeamSetupPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'approvals'>('editor');
   const [sidebarActiveTab, setSidebarActiveTab] = useState('team-setup');
   const [isBacklogLinkEditing, setIsBacklogLinkEditing] = useState(false);
-  const [backlogUrl, setBacklogUrl] = useState(workingAgreement.backlogLink?.url || '');
-  const [backlogType, setBacklogType] = useState(workingAgreement.backlogLink?.type || 'digital-product-journey');
+  const [backlogUrl, setBacklogUrl] = useState('');
+  const [backlogType, setBacklogType] = useState('digital-product-journey');
   
   // Team info links state
   const [isAddingInfoLink, setIsAddingInfoLink] = useState(false);
@@ -55,13 +87,60 @@ const TeamSetupPage: React.FC = () => {
 
   // Business capabilities state
   const [isCapabilitiesExpanded, setIsCapabilitiesExpanded] = useState(false);
-  const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>(
-    workingAgreement.businessCapabilities || []
-  );
+  const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCapabilityCategory, setActiveCapabilityCategory] = useState<'core' | 'enabling'>('core');
 
   const DPJ_DOCUMENTATION_URL = "https://bayergroup.sharepoint.com/sites/026557/SitePages/Technology%20%26%20Engineering/Engineering%20Enablement%20site/openproject_techdoc.aspx?siteid={5CD3A45F-1F48-4F51-A74C-D96928B44568}&webid={E522E984-78F4-4F8F-887D-9244724C8A62}&uniqueid={86603172-74D0-43DA-92FE-6488ADE20191}";
+
+  // Load team data when component mounts or teamId changes
+  useEffect(() => {
+    if (teamId) {
+      const foundTeam = teamsData.find(t => t.id === teamId);
+      if (foundTeam) {
+        setTeam(foundTeam);
+        
+        // If the team has existing working agreement data, use it
+        // Otherwise, keep the default empty working agreement
+        if (foundTeam.workingAgreementId) {
+          // In a real app, we would fetch the working agreement by ID
+          // For now, we'll use the default one but update the title
+          setWorkingAgreement(prev => ({
+            ...prev,
+            title: `${foundTeam.name} Working Agreement`,
+            description: `Working agreement for the ${foundTeam.name} team.`
+          }));
+          setTitle(`${foundTeam.name} Working Agreement`);
+          setDescription(`Working agreement for the ${foundTeam.name} team.`);
+        } else {
+          // For a new team without a working agreement, set a default title with the team name
+          setWorkingAgreement(prev => ({
+            ...prev,
+            title: `${foundTeam.name} Working Agreement`,
+            description: `Working agreement for the ${foundTeam.name} team.`
+          }));
+          setTitle(`${foundTeam.name} Working Agreement`);
+          setDescription(`Working agreement for the ${foundTeam.name} team.`);
+        }
+        
+        // If the team has business capabilities, use them
+        if (foundTeam.businessCapabilities && foundTeam.businessCapabilities.length > 0) {
+          setSelectedCapabilities(foundTeam.businessCapabilities);
+        } else {
+          setSelectedCapabilities([]);
+        }
+        
+        // If the team has a backlog link, use it
+        if (foundTeam.backlogLink) {
+          setBacklogUrl(foundTeam.backlogLink.url || '');
+          setBacklogType(foundTeam.backlogLink.type || 'digital-product-journey');
+        } else {
+          setBacklogUrl('');
+          setBacklogType('digital-product-journey');
+        }
+      }
+    }
+  }, [teamId]);
 
   const handleSectionEdit = (sectionId: string) => {
     setWorkingAgreement(prev => ({
@@ -122,6 +201,26 @@ const TeamSetupPage: React.FC = () => {
       },
       lastUpdated: new Date().toISOString()
     }));
+    
+    // Also update the team data
+    if (team) {
+      const updatedTeam = {
+        ...team,
+        backlogLink: {
+          url: backlogUrl,
+          type: backlogType as 'digital-product-journey' | 'azure-devops' | 'aha' | 'other'
+        }
+      };
+      
+      // Update the team in teamsData array
+      const teamIndex = teamsData.findIndex(t => t.id === team.id);
+      if (teamIndex !== -1) {
+        teamsData[teamIndex] = updatedTeam;
+      }
+      
+      setTeam(updatedTeam);
+    }
+    
     setIsBacklogLinkEditing(false);
     showSuccess('Backlog link updated successfully');
   };
@@ -182,6 +281,23 @@ const TeamSetupPage: React.FC = () => {
       version: Math.round((prev.version + 0.1) * 10) / 10,
       lastUpdated: new Date().toISOString()
     }));
+    
+    // Update the team with the working agreement ID
+    if (team) {
+      const updatedTeam = {
+        ...team,
+        workingAgreementId: workingAgreement.id
+      };
+      
+      // Update the team in teamsData array
+      const teamIndex = teamsData.findIndex(t => t.id === team.id);
+      if (teamIndex !== -1) {
+        teamsData[teamIndex] = updatedTeam;
+      }
+      
+      setTeam(updatedTeam);
+    }
+    
     showSuccess('Working agreement published successfully');
   };
 
@@ -222,24 +338,60 @@ const TeamSetupPage: React.FC = () => {
         teamInfoLinks: [...(prev.teamInfoLinks || []), newLink],
         lastUpdated: new Date().toISOString()
       }));
+      
+      // Also update the team data
+      if (team) {
+        const updatedTeam = {
+          ...team,
+          teamInfoLinks: [...(team.teamInfoLinks || []), newLink]
+        };
+        
+        // Update the team in teamsData array
+        const teamIndex = teamsData.findIndex(t => t.id === team.id);
+        if (teamIndex !== -1) {
+          teamsData[teamIndex] = updatedTeam;
+        }
+        
+        setTeam(updatedTeam);
+      }
+      
       setIsAddingInfoLink(false);
       showSuccess('Team information link added successfully');
     } else if (editingInfoLinkId) {
+      const updatedLink = {
+        id: editingInfoLinkId,
+        title: infoLinkTitle,
+        url: infoLinkUrl,
+        type: infoLinkType,
+        description: infoLinkDescription || undefined
+      };
+      
       setWorkingAgreement(prev => ({
         ...prev,
         teamInfoLinks: (prev.teamInfoLinks || []).map(link => 
-          link.id === editingInfoLinkId 
-            ? { 
-                ...link, 
-                title: infoLinkTitle, 
-                url: infoLinkUrl, 
-                type: infoLinkType,
-                description: infoLinkDescription || undefined
-              } 
-            : link
+          link.id === editingInfoLinkId ? updatedLink : link
         ),
         lastUpdated: new Date().toISOString()
       }));
+      
+      // Also update the team data
+      if (team && team.teamInfoLinks) {
+        const updatedTeam = {
+          ...team,
+          teamInfoLinks: team.teamInfoLinks.map(link => 
+            link.id === editingInfoLinkId ? updatedLink : link
+          )
+        };
+        
+        // Update the team in teamsData array
+        const teamIndex = teamsData.findIndex(t => t.id === team.id);
+        if (teamIndex !== -1) {
+          teamsData[teamIndex] = updatedTeam;
+        }
+        
+        setTeam(updatedTeam);
+      }
+      
       setEditingInfoLinkId(null);
       showSuccess('Team information link updated successfully');
     }
@@ -257,6 +409,23 @@ const TeamSetupPage: React.FC = () => {
         teamInfoLinks: (prev.teamInfoLinks || []).filter(link => link.id !== linkId),
         lastUpdated: new Date().toISOString()
       }));
+      
+      // Also update the team data
+      if (team && team.teamInfoLinks) {
+        const updatedTeam = {
+          ...team,
+          teamInfoLinks: team.teamInfoLinks.filter(link => link.id !== linkId)
+        };
+        
+        // Update the team in teamsData array
+        const teamIndex = teamsData.findIndex(t => t.id === team.id);
+        if (teamIndex !== -1) {
+          teamsData[teamIndex] = updatedTeam;
+        }
+        
+        setTeam(updatedTeam);
+      }
+      
       showSuccess('Team information link deleted successfully');
     }
   };
@@ -275,6 +444,22 @@ const TeamSetupPage: React.FC = () => {
         businessCapabilities: newSelected,
         lastUpdated: new Date().toISOString()
       }));
+      
+      // Also update the team data
+      if (team) {
+        const updatedTeam = {
+          ...team,
+          businessCapabilities: newSelected
+        };
+        
+        // Update the team in teamsData array
+        const teamIndex = teamsData.findIndex(t => t.id === team.id);
+        if (teamIndex !== -1) {
+          teamsData[teamIndex] = updatedTeam;
+        }
+        
+        setTeam(updatedTeam);
+      }
       
       return newSelected;
     });
@@ -334,7 +519,9 @@ const TeamSetupPage: React.FC = () => {
   };
 
   const approvalPercentage = Math.round(
-    (workingAgreement.approvals.filter(a => a.approved).length / workingAgreement.approvals.length) * 100
+    workingAgreement.approvals.length > 0
+      ? (workingAgreement.approvals.filter(a => a.approved).length / workingAgreement.approvals.length) * 100
+      : 0
   );
 
   const getBacklogTypeLabel = (type: string) => {
@@ -389,12 +576,12 @@ const TeamSetupPage: React.FC = () => {
         <header className="bg-white shadow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <div className="flex items-center">
-              <RouterLink to="/" className="text-blue-600 hover:text-blue-800 mr-4">
+              <RouterLink to={teamId ? `/teams/${teamId}` : "/"} className="text-blue-600 hover:text-blue-800 mr-4">
                 <ArrowLeft size={20} />
               </RouterLink>
               <h1 className="text-xl font-semibold text-gray-900 flex items-center">
                 <Users className="h-6 w-6 mr-2 text-blue-500" />
-                Team Setup
+                {team ? `${team.name} - Team Setup` : 'Team Setup'}
               </h1>
             </div>
             <div className="flex items-center space-x-2">
@@ -698,8 +885,8 @@ const TeamSetupPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            setBacklogUrl(workingAgreement.backlogLink?.url || '');
-                            setBacklogType(workingAgreement.backlogLink?.type || 'digital-product-journey');
+                            setBacklogUrl(team?.backlogLink?.url || '');
+                            setBacklogType(team?.backlogLink?.type || 'digital-product-journey');
                             setIsBacklogLinkEditing(false);
                           }}
                           className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -711,21 +898,21 @@ const TeamSetupPage: React.FC = () => {
                     </div>
                   ) : (
                     <div>
-                      {workingAgreement.backlogLink && workingAgreement.backlogLink.url ? (
+                      {backlogUrl ? (
                         <div className="text-sm">
                           <div className="flex items-center">
                             <span className="font-medium">Tool:</span>
-                            <span className="ml-2">{getBacklogTypeLabel(workingAgreement.backlogLink.type)}</span>
+                            <span className="ml-2">{getBacklogTypeLabel(backlogType)}</span>
                           </div>
                           <div className="flex items-center mt-1">
                             <span className="font-medium">URL:</span>
                             <a 
-                              href={workingAgreement.backlogLink.url} 
+                              href={backlogUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="ml-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-md"
                             >
-                              {workingAgreement.backlogLink.url}
+                              {backlogUrl}
                             </a>
                           </div>
                           <button
@@ -1124,21 +1311,21 @@ const TeamSetupPage: React.FC = () => {
                           <Link className="h-4 w-4 mr-1 text-blue-500" />
                           <h3 className="text-sm font-medium text-gray-900">Backlog Management</h3>
                         </div>
-                        {workingAgreement.backlogLink && workingAgreement.backlogLink.url ? (
+                        {backlogUrl ? (
                           <div className="text-sm">
                             <div className="flex items-center">
                               <span className="font-medium">Tool:</span>
-                              <span className="ml-2">{getBacklogTypeLabel(workingAgreement.backlogLink.type)}</span>
+                              <span className="ml-2">{getBacklogTypeLabel(backlogType)}</span>
                             </div>
                             <div className="flex items-center mt-1">
                               <span className="font-medium">URL:</span>
                               <a 
-                                href={workingAgreement.backlogLink.url} 
+                                href={backlogUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="ml-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-md"
                               >
-                                {workingAgreement.backlogLink.url}
+                                {backlogUrl}
                               </a>
                             </div>
                           </div>
@@ -1207,51 +1394,60 @@ const TeamSetupPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="overflow-hidden bg-white shadow sm:rounded-md">
-                    <ul className="divide-y divide-gray-200">
-                      {workingAgreement.approvals.map((approval) => (
-                        <li key={approval.memberId}>
-                          <div className="flex items-center px-4 py-4 sm:px-6">
-                            <div className="min-w-0 flex-1 flex items-center">
-                              <div className="flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                                  {approval.memberId.split(' ').map(name => name[0]).join('')}
+                  {workingAgreement.approvals.length > 0 ? (
+                    <div className="overflow-hidden bg-white shadow sm:rounded-md">
+                      <ul className="divide-y divide-gray-200">
+                        {workingAgreement.approvals.map((approval) => (
+                          <li key={approval.memberId}>
+                            <div className="flex items-center px-4 py-4 sm:px-6">
+                              <div className="min-w-0 flex-1 flex items-center">
+                                <div className="flex-shrink-0">
+                                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                    {approval.memberId.split(' ').map(name => name[0]).join('')}
+                                  </div>
+                                </div>
+                                <div className="min-w-0 flex-1 px-4">
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                      {approval.memberId}
+                                    </p>
+                                    {approval.approved ? (
+                                      <p className="mt-1 flex items-center text-sm text-green-600">
+                                        <CheckCircle className="flex-shrink-0 mr-1.5 h-4 w-4 text-green-500" />
+                                        Approved {approval.approvedAt && `on ${formatDate(approval.approvedAt)}`}
+                                      </p>
+                                    ) : (
+                                      <p className="mt-1 flex items-center text-sm text-gray-500">
+                                        <Clock className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                                        Pending approval
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                              <div className="min-w-0 flex-1 px-4">
-                                <div>
-                                  <p className="text-sm font-medium text-gray-900 truncate">
-                                    {approval.memberId}
-                                  </p>
-                                  {approval.approved ? (
-                                    <p className="mt-1 flex items-center text-sm text-green-600">
-                                      <CheckCircle className="flex-shrink-0 mr-1.5 h-4 w-4 text-green-500" />
-                                      Approved {approval.approvedAt && `on ${formatDate(approval.approvedAt)}`}
-                                    </p>
-                                  ) : (
-                                    <p className="mt-1 flex items-center text-sm text-gray-500">
-                                      <Clock className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                                      Pending approval
-                                    </p>
-                                  )}
-                                </div>
+                              <div>
+                                {!approval.approved && (
+                                  <button
+                                    onClick={() => handleApprove(approval.memberId)}
+                                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                  >
+                                    Approve
+                                  </button>
+                                )}
                               </div>
                             </div>
-                            <div>
-                              {!approval.approved && (
-                                <button
-                                  onClick={() => handleApprove(approval.memberId)}
-                                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                >
-                                  Approve
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-md">
+                      <p className="text-gray-500">No team members added for approval yet.</p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        Team members will appear here once they are added to the team.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1277,7 +1473,6 @@ const TeamSetupPage: React.FC = () => {
                   <button
                     onClick={handlePublish}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    disabled={approvalPercentage < 50}
                   >
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Publish Agreement
