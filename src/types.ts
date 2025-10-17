@@ -47,6 +47,28 @@ export interface BacklogItem {
   tags: string[];
 }
 
+// New type for team
+export interface Team {
+  id: string;
+  name: string;
+  description: string;
+  logo?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'active' | 'inactive' | 'archived';
+  members: string[]; // Array of member IDs
+  businessCapabilities?: string[]; // Array of capability IDs
+  workingAgreementId?: string;
+  metrics?: {
+    cycleTime?: number;
+    deploymentFrequency?: number;
+    leadTime?: number;
+    mttr?: number; // Mean Time to Recovery
+    defectRate?: number;
+    teamHealth?: number; // 0-100 score
+  };
+}
+
 // New type for related teams
 export interface RelatedTeam {
   id: string;

@@ -1,31 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import TeamDescriptionSection from './components/TeamDescriptionSection';
-import TeamMembersSection from './components/TeamMembersSection';
-import OutcomesSection from './components/OutcomesSection';
-import ProgressSection from './components/ProgressSection';
-import ReleaseNotesSection from './components/ReleaseNotesSection';
-import BacklogSection from './components/BacklogSection';
-import ProductAdoptionSection from './components/ProductAdoptionSection';
-import RelatedTeamsSection from './components/RelatedTeamsSection';
-import TeamSetupPage from './components/TeamSetupPage';
-import NinetyDayCyclePlan from './components/NinetyDayCyclePlan';
-import SprintPlan from './components/SprintPlan';
-import DailyStandup from './components/DailyStandup';
-import SprintReviewDemo from './components/SprintReviewDemo';
-import CycleRetrospective from './components/CycleRetrospective';
-import TeamsExplorerPage from './components/TeamsExplorerPage';
-import TeamDashboard from './components/TeamDashboard';
-import AIAssistant from './components/AIAssistant';
-import Stepper from './components/Stepper';
-import { Rocket } from 'lucide-react';
-import { OutcomeData, ProgressData, BacklogItem, ReleaseNote, ProductAdoptionData, Recommendation, RelatedTeam } from './types';
-import { outcomeData, progressData, backlogData, releaseNotesData, productAdoptionData } from './data/dashboardData';
-import { relatedTeamsData } from './data/relatedTeamsData';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import Header from './Header';
+import TeamDescriptionSection from './TeamDescriptionSection';
+import TeamMembersSection from './TeamMembersSection';
+import OutcomesSection from './OutcomesSection';
+import ProgressSection from './ProgressSection';
+import ReleaseNotesSection from './ReleaseNotesSection';
+import BacklogSection from './BacklogSection';
+import ProductAdoptionSection from './ProductAdoptionSection';
+import RelatedTeamsSection from './RelatedTeamsSection';
+import AIAssistant from './AIAssistant';
+import Stepper from './Stepper';
+import { Rocket, ArrowLeft } from 'lucide-react';
+import { OutcomeData, ProgressData, BacklogItem, ReleaseNote, ProductAdoptionData, Recommendation, RelatedTeam, Team } from '../types';
+import { outcomeData, progressData, backlogData, releaseNotesData, productAdoptionData } from '../data/dashboardData';
+import { relatedTeamsData } from '../data/relatedTeamsData';
+import { teamsData } from '../data/teamsData';
+import { Link } from 'react-router-dom';
 
-function Dashboard() {
+const TeamDashboard: React.FC = () => {
+  const { teamId } = useParams<{ teamId: string }>();
+  const [team, setTeam] = useState<Team | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [outcomes, setOutcomes] = useState<OutcomeData>(outcomeData);
@@ -38,6 +34,7 @@ function Dashboard() {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Create a ref to track if we're manually setting the active tab
   const manualTabChange = useRef(false);
@@ -63,6 +60,18 @@ function Dashboard() {
     'backlog-section': 'backlog',
     'related-teams-section': 'related-teams'
   };
+
+  useEffect(() => {
+    // Find the team data based on the teamId
+    const foundTeam = teamsData.find(t => t.id === teamId);
+    if (foundTeam) {
+      setTeam(foundTeam);
+      document.title = `${foundTeam.name} Dashboard`;
+    } else {
+      // Redirect to teams explorer if team not found
+      navigate('/teams');
+    }
+  }, [teamId, navigate]);
 
   // Function to manually set active tab when clicking on a section
   const setActiveTabManually = (tabId: string) => {
@@ -101,12 +110,10 @@ function Dashboard() {
       // Only update if we found a visible section
       if (mostVisibleSection) {
         setActiveSection(mostVisibleSection);
-        console.log(`Most visible section: ${mostVisibleSection}`);
         
         // Update activeTab based on the section-to-tab mapping
         const tabId = sectionToTabMap[mostVisibleSection];
         if (tabId) {
-          console.log(`Setting activeTab to: ${tabId}`);
           setActiveTab(tabId);
         }
       }
@@ -134,11 +141,6 @@ function Dashboard() {
     };
   }, []);
 
-  // Log activeTab changes
-  useEffect(() => {
-    console.log(`activeTab changed to: ${activeTab}`);
-  }, [activeTab]);
-
   useEffect(() => {
     // Check if we need to scroll to a specific section
     if (location.state && location.state.scrollToSection) {
@@ -161,7 +163,7 @@ function Dashboard() {
   const handleStepClick = (index: number) => {
     // Navigate to Sprint Review & Demo when clicking on step #6 (index 5)
     if (index === 5) {
-      window.location.href = '/sprint-review';
+      navigate(`/teams/${teamId}/sprint-review`);
     }
   };
 
@@ -214,6 +216,17 @@ function Dashboard() {
     }
   };
 
+  if (!team) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading team dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -222,28 +235,42 @@ function Dashboard() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-4">
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Rocket className="h-7 w-7 mr-2 text-blue-500" />
-                Accelerator Team Dashboard
-              </h1>
+              <div className="flex items-center mb-2">
+                <Link to="/teams" className="text-blue-600 hover:text-blue-800 mr-3">
+                  <ArrowLeft size={20} />
+                </Link>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                  {team.logo ? (
+                    <img 
+                      src={team.logo} 
+                      alt={`${team.name} logo`} 
+                      className="h-8 w-8 rounded-full object-cover mr-2"
+                    />
+                  ) : (
+                    <Rocket className="h-7 w-7 mr-2 text-blue-500" />
+                  )}
+                  {team.name} Dashboard
+                </h1>
+              </div>
               <p className="mt-1 text-sm text-gray-500">
-                Tracking our progress toward "Health for all, Hunger for none"
+                {team.description}
               </p>
               <div className="mt-4 bg-white rounded-lg shadow p-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Team Workflow</h3>
                 <Stepper 
                   steps={teamWorkflowSteps} 
                   currentStep={3} 
+                  onStepClick={handleStepClick}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
               <div id="team-description-section">
-                <TeamDescriptionSection />
+                <TeamDescriptionSection team={team} />
               </div>
               <div id="team-members-section">
-                <TeamMembersSection />
+                <TeamMembersSection teamId={team.id} />
               </div>
               <div id="outcomes-section">
                 <OutcomesSection outcomes={outcomes} />
@@ -283,163 +310,6 @@ function Dashboard() {
       )}
     </div>
   );
-}
+};
 
-function AppWithRouter() {
-  return (
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/team-setup" element={<TeamSetupPage />} />
-      <Route path="/90-day-cycle" element={
-        <NinetyDayCyclePlan 
-          outcomes={outcomeData} 
-          userResearch={productAdoptionData.userResearch}
-          recommendations={productAdoptionData.recommendations}
-          backlog={backlogData.map(item => {
-            // Add cycle tags for demonstration purposes
-            // In a real app, these would come from the database
-            if (item.id === 'BL-001' || item.id === 'BL-003' || item.id === 'BL-005') {
-              return {...item, tags: [...item.tags, 'Previous Cycle']};
-            } else if (item.id === 'BL-002' || item.id === 'BL-004' || item.id === 'BL-006') {
-              return {...item, tags: [...item.tags, 'Upcoming Cycle']};
-            }
-            return item;
-          })}
-        />
-      } />
-      <Route path="/sprint-plan" element={
-        <SprintPlan 
-          outcomes={outcomeData} 
-          userResearch={productAdoptionData.userResearch}
-          recommendations={productAdoptionData.recommendations}
-          backlog={backlogData.map(item => {
-            // Add sprint tags for demonstration purposes
-            // In a real app, these would come from the database
-            if (item.id === 'BL-001' || item.id === 'BL-003') {
-              return {...item, tags: [...item.tags, 'Current Sprint']};
-            } else if (item.id === 'BL-005') {
-              return {...item, tags: [...item.tags, 'Completed Sprint'], status: 'completed'};
-            }
-            return item;
-          })}
-        />
-      } />
-      <Route path="/daily-standup" element={
-        <DailyStandup 
-          backlog={backlogData.map(item => {
-            // Add sprint tags for demonstration purposes
-            // In a real app, these would come from the database
-            if (item.id === 'BL-001') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'in-progress'};
-            } else if (item.id === 'BL-003') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'not-started'};
-            } else if (item.id === 'BL-002') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'blocked'};
-            } else if (item.id === 'BL-004') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'completed'};
-            }
-            return item;
-          })}
-        />
-      } />
-      <Route path="/sprint-review" element={
-        <SprintReviewDemo 
-          outcomes={outcomeData}
-          backlog={backlogData.map(item => {
-            // Add completed items for demonstration
-            if (item.id === 'BL-004' || item.id === 'BL-005' || item.id === 'BL-006') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'completed'};
-            }
-            return item;
-          })}
-          releaseNotes={releaseNotesData}
-        />
-      } />
-      <Route path="/cycle-retrospective" element={
-        <CycleRetrospective 
-          outcomes={outcomeData}
-          backlog={backlogData}
-        />
-      } />
-      
-      {/* Teams Explorer Routes */}
-      <Route path="/teams" element={<TeamsExplorerPage />} />
-      <Route path="/teams/:teamId" element={<TeamDashboard />} />
-      <Route path="/teams/:teamId/team-setup" element={<TeamSetupPage />} />
-      <Route path="/teams/:teamId/90-day-cycle" element={
-        <NinetyDayCyclePlan 
-          outcomes={outcomeData} 
-          userResearch={productAdoptionData.userResearch}
-          recommendations={productAdoptionData.recommendations}
-          backlog={backlogData.map(item => {
-            if (item.id === 'BL-001' || item.id === 'BL-003' || item.id === 'BL-005') {
-              return {...item, tags: [...item.tags, 'Previous Cycle']};
-            } else if (item.id === 'BL-002' || item.id === 'BL-004' || item.id === 'BL-006') {
-              return {...item, tags: [...item.tags, 'Upcoming Cycle']};
-            }
-            return item;
-          })}
-        />
-      } />
-      <Route path="/teams/:teamId/sprint-plan" element={
-        <SprintPlan 
-          outcomes={outcomeData} 
-          userResearch={productAdoptionData.userResearch}
-          recommendations={productAdoptionData.recommendations}
-          backlog={backlogData.map(item => {
-            if (item.id === 'BL-001' || item.id === 'BL-003') {
-              return {...item, tags: [...item.tags, 'Current Sprint']};
-            } else if (item.id === 'BL-005') {
-              return {...item, tags: [...item.tags, 'Completed Sprint'], status: 'completed'};
-            }
-            return item;
-          })}
-        />
-      } />
-      <Route path="/teams/:teamId/daily-standup" element={
-        <DailyStandup 
-          backlog={backlogData.map(item => {
-            if (item.id === 'BL-001') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'in-progress'};
-            } else if (item.id === 'BL-003') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'not-started'};
-            } else if (item.id === 'BL-002') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'blocked'};
-            } else if (item.id === 'BL-004') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'completed'};
-            }
-            return item;
-          })}
-        />
-      } />
-      <Route path="/teams/:teamId/sprint-review" element={
-        <SprintReviewDemo 
-          outcomes={outcomeData}
-          backlog={backlogData.map(item => {
-            if (item.id === 'BL-004' || item.id === 'BL-005' || item.id === 'BL-006') {
-              return {...item, tags: [...item.tags, 'Current Sprint'], status: 'completed'};
-            }
-            return item;
-          })}
-          releaseNotes={releaseNotesData}
-        />
-      } />
-      <Route path="/teams/:teamId/cycle-retrospective" element={
-        <CycleRetrospective 
-          outcomes={outcomeData}
-          backlog={backlogData}
-        />
-      } />
-    </Routes>
-  );
-}
-
-function App() {
-  return (
-    <Router>
-      <AppWithRouter />
-    </Router>
-  );
-}
-
-export default App;
+export default TeamDashboard;
