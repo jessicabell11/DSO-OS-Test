@@ -12,7 +12,7 @@ import ProductAdoptionSection from './ProductAdoptionSection';
 import RelatedTeamsSection from './RelatedTeamsSection';
 import AIAssistant from './AIAssistant';
 import Stepper from './Stepper';
-import { Rocket, ArrowLeft } from 'lucide-react';
+import { Rocket, ArrowLeft, PlusCircle, Users } from 'lucide-react';
 import { OutcomeData, ProgressData, BacklogItem, ReleaseNote, ProductAdoptionData, Recommendation, RelatedTeam, Team } from '../types';
 import { outcomeData, progressData, backlogData, releaseNotesData, productAdoptionData } from '../data/dashboardData';
 import { relatedTeamsData } from '../data/relatedTeamsData';
@@ -33,6 +33,7 @@ const TeamDashboard: React.FC = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isNewTeam, setIsNewTeam] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -67,6 +68,17 @@ const TeamDashboard: React.FC = () => {
     if (foundTeam) {
       setTeam(foundTeam);
       document.title = `${foundTeam.name} Dashboard`;
+      
+      // Check if this is a newly created team (no members and no business capabilities)
+      if (
+        (!foundTeam.members || foundTeam.members.length === 0) && 
+        (!foundTeam.businessCapabilities || foundTeam.businessCapabilities.length === 0) &&
+        !foundTeam.metrics
+      ) {
+        setIsNewTeam(true);
+      } else {
+        setIsNewTeam(false);
+      }
     } else {
       // Redirect to teams explorer if team not found
       navigate('/teams');
@@ -255,44 +267,84 @@ const TeamDashboard: React.FC = () => {
               <p className="mt-1 text-sm text-gray-500">
                 {team.description}
               </p>
-              <div className="mt-4 bg-white rounded-lg shadow p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Team Workflow</h3>
-                <Stepper 
-                  steps={teamWorkflowSteps} 
-                  currentStep={3} 
-                  onStepClick={handleStepClick}
-                />
-              </div>
+              
+              {!isNewTeam && (
+                <div className="mt-4 bg-white rounded-lg shadow p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Team Workflow</h3>
+                  <Stepper 
+                    steps={teamWorkflowSteps} 
+                    currentStep={3} 
+                    onStepClick={handleStepClick}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-6">
               <div id="team-description-section">
                 <TeamDescriptionSection team={team} />
               </div>
-              <div id="team-members-section">
-                <TeamMembersSection teamId={team.id} />
-              </div>
-              <div id="outcomes-section">
-                <OutcomesSection outcomes={outcomes} />
-              </div>
-              <div id="progress-section">
-                <ProgressSection progress={progress} />
-              </div>
-              <div id="product-adoption-section">
-                <ProductAdoptionSection 
-                  productAdoption={productAdoption} 
-                  addToBacklog={addRecommendationToBacklog} 
-                />
-              </div>
-              <div id="release-notes-section">
-                <ReleaseNotesSection releaseNotes={releaseNotes} />
-              </div>
-              <div id="backlog-section">
-                <BacklogSection backlog={backlog} setBacklog={setBacklog} />
-              </div>
-              <div id="related-teams-section">
-                <RelatedTeamsSection relatedTeams={relatedTeams} />
-              </div>
+              
+              {isNewTeam ? (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Get Started with Your Team</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                      Set up your team and start tracking your progress
+                    </p>
+                  </div>
+                  <div className="px-4 py-12 sm:p-12 text-center">
+                    <Users className="mx-auto h-12 w-12 text-blue-400" />
+                    <h3 className="mt-2 text-lg font-medium text-gray-900">Your team is ready!</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Start by adding team members, defining outcomes, or setting up your working agreement.
+                    </p>
+                    <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+                      <Link
+                        to={`/teams/${team.id}/team-setup`}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Set Up Team
+                      </Link>
+                      <Link
+                        to="/teams"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Back to Teams Explorer
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div id="team-members-section">
+                    <TeamMembersSection teamId={team.id} />
+                  </div>
+                  <div id="outcomes-section">
+                    <OutcomesSection outcomes={outcomes} />
+                  </div>
+                  <div id="progress-section">
+                    <ProgressSection progress={progress} />
+                  </div>
+                  <div id="product-adoption-section">
+                    <ProductAdoptionSection 
+                      productAdoption={productAdoption} 
+                      addToBacklog={addRecommendationToBacklog} 
+                    />
+                  </div>
+                  <div id="release-notes-section">
+                    <ReleaseNotesSection releaseNotes={releaseNotes} />
+                  </div>
+                  <div id="backlog-section">
+                    <BacklogSection backlog={backlog} setBacklog={setBacklog} />
+                  </div>
+                  <div id="related-teams-section">
+                    <RelatedTeamsSection relatedTeams={relatedTeams} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </main>

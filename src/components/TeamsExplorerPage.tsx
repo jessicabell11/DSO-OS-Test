@@ -143,6 +143,11 @@ const TeamsExplorerPage: React.FC = () => {
     }, 3000);
   };
 
+  // Handle navigation to team dashboard
+  const handleViewTeamDashboard = (teamId: string) => {
+    navigate(`/teams/${teamId}`);
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={sidebarActiveTab} setActiveTab={setSidebarActiveTab} />
@@ -232,13 +237,13 @@ const TeamsExplorerPage: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center">
-                            <Link
-                              to={`/teams/${team.id}`}
+                            <button
+                              onClick={() => handleViewTeamDashboard(team.id)}
                               className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
                               View Dashboard
                               <ChevronRight className="ml-1 h-4 w-4" />
-                            </Link>
+                            </button>
                           </div>
                         </div>
                         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
