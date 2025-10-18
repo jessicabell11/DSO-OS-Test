@@ -58,7 +58,7 @@ export interface TeamInfoLink {
   id: string;
   title: string;
   url: string;
-  type: 'sharepoint' | 'wiki' | 'documentation' | 'other';
+  type: 'sharepoint' | 'wiki' | 'documentation' | 'teams-channel' | 'other';
   description?: string;
 }
 

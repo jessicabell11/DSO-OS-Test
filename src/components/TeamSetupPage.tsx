@@ -24,7 +24,8 @@ import {
   ChevronUp,
   Search,
   Image,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability, Team } from '../types';
@@ -84,7 +85,7 @@ const TeamSetupPage: React.FC = () => {
   const [editingInfoLinkId, setEditingInfoLinkId] = useState<string | null>(null);
   const [infoLinkTitle, setInfoLinkTitle] = useState('');
   const [infoLinkUrl, setInfoLinkUrl] = useState('');
-  const [infoLinkType, setInfoLinkType] = useState<'sharepoint' | 'wiki' | 'documentation' | 'other'>('sharepoint');
+  const [infoLinkType, setInfoLinkType] = useState<'sharepoint' | 'wiki' | 'documentation' | 'teams-channel' | 'other'>('sharepoint');
   const [infoLinkDescription, setInfoLinkDescription] = useState('');
 
   // Business capabilities state
@@ -649,6 +650,8 @@ const TeamSetupPage: React.FC = () => {
         return 'Wiki';
       case 'documentation':
         return 'Documentation';
+      case 'teams-channel':
+        return 'Teams Channel';
       case 'other':
         return 'Other';
       default:
@@ -664,6 +667,8 @@ const TeamSetupPage: React.FC = () => {
         return <FileText className="h-4 w-4 text-purple-500" />;
       case 'documentation':
         return <FileText className="h-4 w-4 text-green-500" />;
+      case 'teams-channel':
+        return <MessageSquare className="h-4 w-4 text-blue-600" />;
       case 'other':
         return <Globe className="h-4 w-4 text-gray-500" />;
       default:
@@ -1180,6 +1185,7 @@ const TeamSetupPage: React.FC = () => {
                           <option value="sharepoint">SharePoint</option>
                           <option value="wiki">Wiki</option>
                           <option value="documentation">Documentation</option>
+                          <option value="teams-channel">Teams Channel</option>
                           <option value="other">Other</option>
                         </select>
                       </div>
