@@ -69,3 +69,24 @@ export interface BusinessCapability {
   domain: string;
   description?: string;
 }
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  avatar?: string;
+  email: string;
+  phone?: string;
+  location?: string;
+  department?: string;
+  skills?: string[];
+  availability: 'available' | 'busy' | 'away' | 'offline';
+  bio?: string;
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    other?: string;
+  };
+  projects?: string[];
+}

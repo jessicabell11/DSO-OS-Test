@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, 
   FileText, 
@@ -22,7 +22,9 @@ import {
   Briefcase,
   ChevronDown,
   ChevronUp,
-  Search
+  Search,
+  Image,
+  Sparkles
 } from 'lucide-react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability, Team } from '../types';
@@ -91,6 +93,15 @@ const TeamSetupPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCapabilityCategory, setActiveCapabilityCategory] = useState<'core' | 'enabling'>('core');
 
+  // Team logo state
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string>('');
+  const [isGeneratingLogo, setIsGeneratingLogo] = useState(false);
+  const [logoPrompt, setLogoPrompt] = useState('');
+  const [generatedLogos, setGeneratedLogos] = useState<string[]>([]);
+  const [selectedGeneratedLogo, setSelectedGeneratedLogo] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const DPJ_DOCUMENTATION_URL = "https://bayergroup.sharepoint.com/sites/026557/SitePages/Technology%20%26%20Engineering/Engineering%20Enablement%20site/openproject_techdoc.aspx?siteid={5CD3A45F-1F48-4F51-A74C-D96928B44568}&webid={E522E984-78F4-4F8F-887D-9244724C8A62}&uniqueid={86603172-74D0-43DA-92FE-6488ADE20191}";
 
   // Load team data when component mounts or teamId changes
@@ -99,6 +110,11 @@ const TeamSetupPage: React.FC = () => {
       const foundTeam = teamsData.find(t => t.id === teamId);
       if (foundTeam) {
         setTeam(foundTeam);
+        
+        // If the team has a logo, set it
+        if (foundTeam.logo) {
+          setLogoUrl(foundTeam.logo);
+        }
         
         // If the team has existing working agreement data, use it
         // Otherwise, keep the default empty working agreement
@@ -465,6 +481,90 @@ const TeamSetupPage: React.FC = () => {
     });
   };
 
+  // Team logo handlers
+  const handleLogoModalOpen = () => {
+    setIsLogoModalOpen(true);
+  };
+
+  const handleLogoModalClose = () => {
+    setIsLogoModalOpen(false);
+    setSelectedGeneratedLogo(null);
+    setGeneratedLogos([]);
+    setLogoPrompt('');
+  };
+
+  const handleLogoUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setLogoUrl(result);
+        updateTeamLogo(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleGenerateLogo = () => {
+    if (!logoPrompt.trim()) {
+      alert('Please enter a description for the logo');
+      return;
+    }
+
+    setIsGeneratingLogo(true);
+
+    // Simulate AI logo generation with a delay
+    setTimeout(() => {
+      // Generate some placeholder logos (in a real app, these would come from an AI service)
+      const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+      const mockLogos = colors.map((color, index) => {
+        // Create a simple SVG logo with the first letter of the team name
+        const letter = team?.name.charAt(0) || 'T';
+        return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="${color}" /><text x="50" y="65" font-family="Arial" font-size="45" font-weight="bold" text-anchor="middle" fill="white">${letter}</text></svg>`;
+      });
+
+      setGeneratedLogos(mockLogos);
+      setIsGeneratingLogo(false);
+    }, 2000);
+  };
+
+  const handleSelectGeneratedLogo = (logo: string) => {
+    setSelectedGeneratedLogo(logo);
+  };
+
+  const handleApplyGeneratedLogo = () => {
+    if (selectedGeneratedLogo) {
+      setLogoUrl(selectedGeneratedLogo);
+      updateTeamLogo(selectedGeneratedLogo);
+      handleLogoModalClose();
+    }
+  };
+
+  const updateTeamLogo = (logoUrl: string) => {
+    if (team) {
+      const updatedTeam = {
+        ...team,
+        logo: logoUrl
+      };
+      
+      // Update the team in teamsData array
+      const teamIndex = teamsData.findIndex(t => t.id === team.id);
+      if (teamIndex !== -1) {
+        teamsData[teamIndex] = updatedTeam;
+      }
+      
+      setTeam(updatedTeam);
+      showSuccess('Team logo updated successfully');
+    }
+  };
+
   const filteredCapabilities = (category: 'core' | 'enabling') => {
     const capabilities = category === 'core' ? coreCapabilities : enablingCapabilities;
     
@@ -686,6 +786,51 @@ const TeamSetupPage: React.FC = () => {
                 <div className="mt-3 flex items-center text-sm text-gray-500">
                   <Clock className="h-4 w-4 mr-1" />
                   <span>Last updated: {formatDate(workingAgreement.lastUpdated)}</span>
+                </div>
+
+                {/* Team Logo Section */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center mb-2">
+                    <Image className="h-4 w-4 mr-1 text-blue-500" />
+                    <h3 className="text-sm font-medium text-gray-900">Team Logo</h3>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="h-20 w-20 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {logoUrl ? (
+                        <img 
+                          src={logoUrl} 
+                          alt="Team logo" 
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Image className="h-8 w-8 text-gray-300" />
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleLogoModalOpen}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <Upload size={14} className="mr-1" />
+                        {logoUrl ? 'Change Logo' : 'Add Logo'}
+                      </button>
+                      
+                      {logoUrl && (
+                        <button
+                          onClick={() => {
+                            setLogoUrl('');
+                            updateTeamLogo('');
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <Trash size={14} className="mr-1" />
+                          Remove Logo
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Business Capabilities Section */}
@@ -1489,6 +1634,123 @@ const TeamSetupPage: React.FC = () => {
         <div className="fixed bottom-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 shadow-md rounded-md flex items-center">
           <CheckCircle className="h-5 w-5 mr-2" />
           <span>{successMessage}</span>
+        </div>
+      )}
+
+      {/* Logo Upload/Generate Modal */}
+      {isLogoModalOpen && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">Team Logo</h3>
+                <button
+                  onClick={handleLogoModalClose}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4">
+              <div className="flex flex-col md:flex-row md:space-x-6">
+                {/* Upload Section */}
+                <div className="flex-1 mb-6 md:mb-0">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Upload Logo</h4>
+                  <div 
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
+                    onClick={handleLogoUploadClick}
+                  >
+                    <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, SVG (max 2MB)</p>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleLogoFileChange}
+                    />
+                  </div>
+                </div>
+                
+                {/* AI Generate Section */}
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Generate with AI</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="logo-prompt" className="block text-xs font-medium text-gray-700">
+                        Describe your team logo
+                      </label>
+                      <textarea
+                        id="logo-prompt"
+                        value={logoPrompt}
+                        onChange={(e) => setLogoPrompt(e.target.value)}
+                        rows={3}
+                        placeholder="E.g., A modern logo for a software development team with blue and green colors"
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+                    
+                    <button
+                      onClick={handleGenerateLogo}
+                      disabled={isGeneratingLogo}
+                      className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                    >
+                      {isGeneratingLogo ? (
+                        <>
+                          <span className="animate-spin mr-2">⟳</span>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={16} className="mr-2" />
+                          Generate Logo
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Generated Logos Section */}
+              {generatedLogos.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Generated Logos</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    {generatedLogos.map((logo, index) => (
+                      <div 
+                        key={index}
+                        className={`aspect-square border rounded-md overflow-hidden cursor-pointer ${
+                          selectedGeneratedLogo === logo ? 'ring-2 ring-blue-500' : 'hover:border-blue-300'
+                        }`}
+                        onClick={() => handleSelectGeneratedLogo(logo)}
+                      >
+                        <img 
+                          src={logo} 
+                          alt={`Generated logo option ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {selectedGeneratedLogo && (
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={handleApplyGeneratedLogo}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <CheckCircle size={16} className="mr-2" />
+                        Apply Selected Logo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
