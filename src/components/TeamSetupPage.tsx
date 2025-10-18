@@ -507,6 +507,8 @@ const TeamSetupPage: React.FC = () => {
         const result = event.target?.result as string;
         setLogoUrl(result);
         updateTeamLogo(result);
+        // Automatically close the modal after file upload
+        handleLogoModalClose();
       };
       reader.readAsDataURL(file);
     }
@@ -680,7 +682,16 @@ const TeamSetupPage: React.FC = () => {
                 <ArrowLeft size={20} />
               </RouterLink>
               <h1 className="text-xl font-semibold text-gray-900 flex items-center">
-                <Users className="h-6 w-6 mr-2 text-blue-500" />
+                {logoUrl && (
+                  <div className="h-8 w-8 rounded-md overflow-hidden mr-2">
+                    <img 
+                      src={logoUrl} 
+                      alt={`${team?.name || 'Team'} logo`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+                {!logoUrl && <Users className="h-6 w-6 mr-2 text-blue-500" />}
                 {team ? `${team.name} - Team Setup` : 'Team Setup'}
               </h1>
             </div>
