@@ -87,6 +87,12 @@ const TeamSetupPage: React.FC = () => {
   const [infoLinkUrl, setInfoLinkUrl] = useState('');
   const [infoLinkType, setInfoLinkType] = useState<'sharepoint' | 'wiki' | 'documentation' | 'teams-channel' | 'other'>('sharepoint');
   const [infoLinkDescription, setInfoLinkDescription] = useState('');
+  const [infoLinkErrors, setInfoLinkErrors] = useState<{
+    title?: string;
+    url?: string;
+  }>({});
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Business capabilities state
   const [isCapabilitiesExpanded, setIsCapabilitiesExpanded] = useState(false);
@@ -325,6 +331,7 @@ const TeamSetupPage: React.FC = () => {
     setInfoLinkUrl('');
     setInfoLinkType('sharepoint');
     setInfoLinkDescription('');
+    setInfoLinkErrors({});
   };
 
   const handleEditInfoLink = (link: TeamInfoLink) => {
@@ -333,11 +340,47 @@ const TeamSetupPage: React.FC = () => {
     setInfoLinkUrl(link.url);
     setInfoLinkType(link.type);
     setInfoLinkDescription(link.description || '');
+    setInfoLinkErrors({});
+  };
+
+  const validateInfoLink = (): boolean => {
+    const errors: {
+      title?: string;
+      url?: string;
+    } = {};
+    
+    if (!infoLinkTitle.trim()) {
+      errors.title = 'Title is required';
+    }
+    
+    if (!infoLinkUrl.trim()) {
+      errors.url = 'URL is required';
+    } else if (!isValidUrl(infoLinkUrl)) {
+      errors.url = 'Please enter a valid URL (e.g., https://example.com)';
+    }
+    
+    setInfoLinkErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      const errorMessages = Object.values(errors).join(', ');
+      showError(`Please fix the following: ${errorMessages}`);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
   };
 
   const handleSaveInfoLink = () => {
-    if (!infoLinkTitle || !infoLinkUrl) {
-      alert('Title and URL are required');
+    if (!validateInfoLink()) {
       return;
     }
 
@@ -417,6 +460,7 @@ const TeamSetupPage: React.FC = () => {
   const handleCancelInfoLink = () => {
     setIsAddingInfoLink(false);
     setEditingInfoLinkId(null);
+    setInfoLinkErrors({});
   };
 
   const handleDeleteInfoLink = (linkId: string) => {
@@ -605,9 +649,19 @@ const TeamSetupPage: React.FC = () => {
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setShowSuccessMessage(true);
+    setShowErrorMessage(false);
     setTimeout(() => {
       setShowSuccessMessage(false);
     }, 3000);
+  };
+
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setShowErrorMessage(true);
+    setShowSuccessMessage(false);
+    setTimeout(() => {
+      setShowErrorMessage(false);
+    }, 5000);
   };
 
   const formatDate = (dateString: string) => {
@@ -1146,7 +1200,7 @@ const TeamSetupPage: React.FC = () => {
                     <div className="bg-gray-50 p-3 rounded-md space-y-3">
                       <div>
                         <label htmlFor="info-link-title" className="block text-xs font-medium text-gray-700">
-                          Title
+                          Title <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1154,13 +1208,18 @@ const TeamSetupPage: React.FC = () => {
                           value={infoLinkTitle}
                           onChange={(e) => setInfoLinkTitle(e.target.value)}
                           placeholder="Team SharePoint"
-                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          className={`mt-1 block w-full border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                            infoLinkErrors.title ? 'border-red-300' : 'border-gray-300'
+                          }`}
                         />
+                        {infoLinkErrors.title && (
+                          <p className="mt-1 text-xs text-red-600">{infoLinkErrors.title}</p>
+                        )}
                       </div>
                       
                       <div>
                         <label htmlFor="info-link-url" className="block text-xs font-medium text-gray-700">
-                          URL
+                          URL <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="url"
@@ -1168,8 +1227,13 @@ const TeamSetupPage: React.FC = () => {
                           value={infoLinkUrl}
                           onChange={(e) => setInfoLinkUrl(e.target.value)}
                           placeholder="https://..."
-                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          className={`mt-1 block w-full border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                            infoLinkErrors.url ? 'border-red-300' : 'border-gray-300'
+                          }`}
                         />
+                        {infoLinkErrors.url && (
+                          <p className="mt-1 text-xs text-red-600">{infoLinkErrors.url}</p>
+                        )}
                       </div>
                       
                       <div>
@@ -1651,6 +1715,14 @@ const TeamSetupPage: React.FC = () => {
         <div className="fixed bottom-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 shadow-md rounded-md flex items-center">
           <CheckCircle className="h-5 w-5 mr-2" />
           <span>{successMessage}</span>
+        </div>
+      )}
+
+      {/* Error message */}
+      {showErrorMessage && (
+        <div className="fixed bottom-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 shadow-md rounded-md flex items-center">
+          <AlertCircle className="h-5 w-5 mr-2" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
