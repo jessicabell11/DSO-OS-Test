@@ -83,38 +83,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
 
   return (
     <div className={`hidden md:flex flex-col ${collapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative`}>
-      {/* Team name header */}
-      {team && (
-        <div className="flex items-center h-16 border-b border-gray-200 px-4">
-          {!collapsed ? (
-            <div className="flex items-center">
-              {team.logo ? (
-                <img 
-                  src={team.logo} 
-                  alt={`${team.name} logo`} 
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-              ) : (
-                <Rocket className="h-6 w-6 text-blue-500" />
-              )}
-              <span className="ml-2 text-lg font-medium text-gray-800 truncate">
-                {team.name}
-              </span>
-            </div>
-          ) : (
-            team.logo ? (
-              <img 
-                src={team.logo} 
-                alt={`${team.name} logo`} 
-                className="h-8 w-8 rounded-full object-cover mx-auto"
-              />
-            ) : (
-              <Rocket className="h-6 w-6 text-blue-500 mx-auto" />
-            )
-          )}
-        </div>
-      )}
-      
       <div className="flex flex-col flex-1 overflow-y-auto pt-4">
         <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) => {
