@@ -602,7 +602,7 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                   <h2 className="text-lg font-medium text-gray-900">Outcome Hierarchy</h2>
                 </div>
                 <p className="mt-1 text-sm text-gray-500">
-                  Visualize how your outcomes align from long-term to mid-term
+                  Align our long-term and mid-term outcomes to track our progress towards "Health for all, Hunger for none"
                 </p>
               </div>
               <div className="p-4">
