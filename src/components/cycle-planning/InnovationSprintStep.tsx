@@ -23,7 +23,7 @@ const InnovationSprintStep: React.FC<InnovationSprintStepProps> = ({
   
   const handleOpenInnovationSprint = () => {
     // Open the innovation sprint URL in a new tab
-    window.open(innovationSprintUrl, '_blank');
+    window.open("https://app.mural.co/t/bayer1789/template/b3788c3f-c31d-4870-9db6-c7b0ca085c4d", '_blank');
   };
   
   const handleSprintComplete = () => {
