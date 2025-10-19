@@ -1,13 +1,15 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface StepperProps {
   steps: string[];
   currentStep?: number;
+  onStepClick?: (index: number) => void;
 }
 
-const Stepper: React.FC<StepperProps> = ({ steps, currentStep = 0 }) => {
+const Stepper: React.FC<StepperProps> = ({ steps, currentStep = 0, onStepClick }) => {
   const navigate = useNavigate();
+  const { teamId } = useParams<{ teamId?: string }>();
   const containerRef = useRef<HTMLDivElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [topArcPath, setTopArcPath] = useState<string>('');
@@ -68,31 +70,69 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep = 0 }) => {
   }, [steps]); // Recalculate when steps change
   
   const handleStepClick = (index: number) => {
+    // If parent component provided an onStepClick handler, use that
+    if (onStepClick) {
+      onStepClick(index);
+      return;
+    }
+    
+    // Otherwise, handle navigation internally
+    // Navigate to Long & Mid-Term Outcomes when clicking on step #1 (index 0)
+    if (index === 0) {
+      if (teamId) {
+        navigate(`/teams/${teamId}/long-mid-term-outcomes`);
+      } else {
+        navigate('/long-mid-term-outcomes');
+      }
+    }
     // Navigate to Team Setup page when clicking on step #2 (index 1)
-    if (index === 1) {
-      navigate('/team-setup');
+    else if (index === 1) {
+      if (teamId) {
+        navigate(`/teams/${teamId}/team-setup`);
+      } else {
+        navigate('/team-setup');
+      }
     }
     // Navigate to 90-Day Cycle Plan when clicking on step #3 (index 2)
     else if (index === 2) {
-      navigate('/90-day-cycle');
+      if (teamId) {
+        navigate(`/teams/${teamId}/90-day-cycle`);
+      } else {
+        navigate('/90-day-cycle');
+      }
     }
     // Navigate to Sprint Plan when clicking on step #4 (index 3)
     else if (index === 3) {
-      navigate('/sprint-plan');
+      if (teamId) {
+        navigate(`/teams/${teamId}/sprint-plan`);
+      } else {
+        navigate('/sprint-plan');
+      }
     }
     // Navigate to Daily Standup when clicking on step #5 (index 4)
     else if (index === 4) {
-      navigate('/daily-standup');
+      if (teamId) {
+        navigate(`/teams/${teamId}/daily-standup`);
+      } else {
+        navigate('/daily-standup');
+      }
     }
     // Navigate to Sprint Review & Demo when clicking on step #6 (index 5)
     else if (index === 5) {
-      navigate('/sprint-review');
+      if (teamId) {
+        navigate(`/teams/${teamId}/sprint-review`);
+      } else {
+        navigate('/sprint-review');
+      }
     }
     // Navigate to 90-Day Cycle Retrospective when clicking on step #7 (index 6)
     else if (index === 6) {
-      navigate('/cycle-retrospective');
+      if (teamId) {
+        navigate(`/teams/${teamId}/cycle-retrospective`);
+      } else {
+        navigate('/cycle-retrospective');
+      }
     }
-    // Add more navigation logic for other steps as needed
   };
   
   return (
@@ -154,7 +194,7 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep = 0 }) => {
                   ${index <= currentStep 
                     ? 'border-blue-500 bg-blue-500 text-white' 
                     : 'border-gray-300 bg-white text-gray-500'}
-                  ${(index === 1 || index === 2 || index === 3 || index === 4 || index === 5 || index === 6) ? 'cursor-pointer hover:border-blue-600' : ''}`}
+                  cursor-pointer hover:border-blue-600`}
                 onClick={() => handleStepClick(index)}
               >
                 <span className="flex items-center justify-center text-sm leading-none">
@@ -162,7 +202,7 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep = 0 }) => {
                 </span>
               </div>
               <div 
-                className={`mt-4 text-sm text-center max-w-[100px] ${(index === 1 || index === 2 || index === 3 || index === 4 || index === 5 || index === 6) ? 'cursor-pointer hover:text-blue-600' : ''}`}
+                className="mt-4 text-sm text-center max-w-[100px] cursor-pointer hover:text-blue-600"
                 onClick={() => handleStepClick(index)}
               >
                 {step}

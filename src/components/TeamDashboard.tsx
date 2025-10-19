@@ -172,9 +172,29 @@ const TeamDashboard: React.FC = () => {
   }, [location]);
 
   const handleStepClick = (index: number) => {
+    // Navigate to Long & Mid-Term Outcomes when clicking on step #1 (index 0)
+    if (index === 0) {
+      navigate(`/teams/${teamId}/long-mid-term-outcomes`);
+    }
     // Navigate to Sprint Review & Demo when clicking on step #6 (index 5)
-    if (index === 5) {
+    else if (index === 5) {
       navigate(`/teams/${teamId}/sprint-review`);
+    }
+    // Add navigation for other steps as needed
+    else if (index === 1) {
+      navigate(`/teams/${teamId}/team-setup`);
+    }
+    else if (index === 2) {
+      navigate(`/teams/${teamId}/90-day-cycle`);
+    }
+    else if (index === 3) {
+      navigate(`/teams/${teamId}/sprint-plan`);
+    }
+    else if (index === 4) {
+      navigate(`/teams/${teamId}/daily-standup`);
+    }
+    else if (index === 6) {
+      navigate(`/teams/${teamId}/cycle-retrospective`);
     }
   };
 
