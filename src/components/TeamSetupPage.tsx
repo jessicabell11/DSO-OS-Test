@@ -105,6 +105,7 @@ const TeamSetupPage: React.FC = () => {
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [isGeneratingLogo, setIsGeneratingLogo] = useState(false);
   const [logoPrompt, setLogoPrompt] = useState('');
+  const [logoPromptError, setLogoPromptError] = useState<string | null>(null);
   const [generatedLogos, setGeneratedLogos] = useState<string[]>([]);
   const [selectedGeneratedLogo, setSelectedGeneratedLogo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -529,6 +530,7 @@ const TeamSetupPage: React.FC = () => {
   // Team logo handlers
   const handleLogoModalOpen = () => {
     setIsLogoModalOpen(true);
+    setLogoPromptError(null);
   };
 
   const handleLogoModalClose = () => {
@@ -536,6 +538,7 @@ const TeamSetupPage: React.FC = () => {
     setSelectedGeneratedLogo(null);
     setGeneratedLogos([]);
     setLogoPrompt('');
+    setLogoPromptError(null);
   };
 
   const handleLogoUploadClick = () => {
@@ -559,9 +562,18 @@ const TeamSetupPage: React.FC = () => {
     }
   };
 
-  const handleGenerateLogo = () => {
+  const validateLogoPrompt = (): boolean => {
     if (!logoPrompt.trim()) {
-      alert('Please enter a description for the logo');
+      setLogoPromptError('Please enter a description for the logo');
+      return false;
+    }
+    
+    setLogoPromptError(null);
+    return true;
+  };
+
+  const handleGenerateLogo = () => {
+    if (!validateLogoPrompt()) {
       return;
     }
 
@@ -1770,16 +1782,26 @@ const TeamSetupPage: React.FC = () => {
                   <div className="space-y-3">
                     <div>
                       <label htmlFor="logo-prompt" className="block text-xs font-medium text-gray-700">
-                        Describe your team logo
+                        Describe your team logo <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         id="logo-prompt"
                         value={logoPrompt}
-                        onChange={(e) => setLogoPrompt(e.target.value)}
+                        onChange={(e) => {
+                          setLogoPrompt(e.target.value);
+                          if (logoPromptError && e.target.value.trim()) {
+                            setLogoPromptError(null);
+                          }
+                        }}
                         rows={3}
                         placeholder="E.g., A modern logo for a software development team with blue and green colors"
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className={`mt-1 block w-full border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                          logoPromptError ? 'border-red-300' : 'border-gray-300'
+                        }`}
                       />
+                      {logoPromptError && (
+                        <p className="mt-1 text-xs text-red-600">{logoPromptError}</p>
+                      )}
                     </div>
                     
                     <button
