@@ -17,7 +17,8 @@ import {
   Edit,
   Eye,
   X,
-  Save
+  Save,
+  Hash
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Team, BusinessCapability } from '../types';
@@ -162,6 +163,12 @@ const TeamsExplorerPage: React.FC = () => {
     navigate(`/teams/${teamId}`);
   };
 
+  // Extract team ID number from team.id (e.g., "team-001" -> "001")
+  const getTeamIdNumber = (teamId: string): string => {
+    const match = teamId.match(/team-(\d+)/);
+    return match ? match[1] : '';
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={sidebarActiveTab} setActiveTab={setSidebarActiveTab} />
@@ -241,8 +248,12 @@ const TeamsExplorerPage: React.FC = () => {
                             <div className="ml-4">
                               <div className="flex items-center">
                                 <h2 className="text-lg font-medium text-gray-900">{team.name}</h2>
-                                <div className="ml-2">
+                                <div className="ml-2 flex items-center">
                                   {getTeamStatusBadge(team.status)}
+                                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <Hash className="h-3 w-3 mr-1" />
+                                    {getTeamIdNumber(team.id)}
+                                  </span>
                                 </div>
                               </div>
                               <div className="mt-1 text-sm text-gray-500 max-w-2xl">
