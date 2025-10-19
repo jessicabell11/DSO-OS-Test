@@ -798,13 +798,13 @@ const TeamSetupPage: React.FC = () => {
                   <div className="h-8 w-8 rounded-md overflow-hidden mr-2">
                     <img 
                       src={logoUrl} 
-                      alt={`${team?.name || 'Team'} logo`}
+                      alt="Team logo"
                       className="h-full w-full object-cover"
                     />
                   </div>
                 )}
                 {!logoUrl && <Users className="h-6 w-6 mr-2 text-blue-500" />}
-                {team ? `${team.name} - Team Setup` : 'Team Setup'}
+                Team Setup
               </h1>
             </div>
             <div className="flex items-center space-x-2">
