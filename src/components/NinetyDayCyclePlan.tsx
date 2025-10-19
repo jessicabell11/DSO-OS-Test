@@ -21,6 +21,12 @@ interface NinetyDayCyclePlanProps {
   backlog: BacklogItem[];
 }
 
+interface QuarterInfo {
+  quarter: string;
+  year: string;
+  label: string;
+}
+
 const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
   outcomes,
   userResearch,
@@ -47,9 +53,47 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   // State for quarter selector dropdown
   const [showQuarterSelector, setShowQuarterSelector] = useState(false);
-  // State for selected quarter and year
-  const [selectedQuarter, setSelectedQuarter] = useState("Q4");
-  const [selectedYear, setSelectedYear] = useState("2025");
+  
+  // Get current and next quarter information
+  const [availableQuarters, currentQuarterIndex] = React.useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    // Determine current quarter (0-based: 0=Q1, 1=Q2, 2=Q3, 3=Q4)
+    const currentQuarterNum = Math.floor(currentMonth / 3);
+    
+    // Create current quarter info
+    const currentQuarter: QuarterInfo = {
+      quarter: `Q${currentQuarterNum + 1}`,
+      year: currentYear.toString(),
+      label: `Q${currentQuarterNum + 1} ${currentYear}`
+    };
+    
+    // Create next quarter info
+    let nextQuarterNum = currentQuarterNum + 1;
+    let nextQuarterYear = currentYear;
+    
+    // If current quarter is Q4, next quarter is Q1 of next year
+    if (nextQuarterNum > 3) {
+      nextQuarterNum = 0;
+      nextQuarterYear = currentYear + 1;
+    }
+    
+    const nextQuarter: QuarterInfo = {
+      quarter: `Q${nextQuarterNum + 1}`,
+      year: nextQuarterYear.toString(),
+      label: `Q${nextQuarterNum + 1} ${nextQuarterYear}`
+    };
+    
+    return [[currentQuarter, nextQuarter], 0];
+  }, []);
+  
+  // State for selected quarter index (0 = current quarter, 1 = next quarter)
+  const [selectedQuarterIndex, setSelectedQuarterIndex] = useState(0);
+  
+  // Get the upcoming quarter and year for display
+  const upcomingQuarter = availableQuarters[selectedQuarterIndex].label;
   
   // Filter backlog items for different panels
   const previousCycleItems = items.filter(item => 
@@ -70,9 +114,6 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
       },
     })
   );
-
-  // Get the upcoming quarter and year for display
-  const upcomingQuarter = `${selectedQuarter} ${selectedYear}`;
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -153,26 +194,9 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
   };
 
   // Handle quarter selection
-  const handleQuarterSelection = (quarter: string) => {
-    setSelectedQuarter(quarter);
+  const handleQuarterSelection = (index: number) => {
+    setSelectedQuarterIndex(index);
     setShowQuarterSelector(false);
-  };
-
-  // Handle year selection
-  const handleYearSelection = (year: string) => {
-    setSelectedYear(year);
-    setShowQuarterSelector(false);
-  };
-
-  // Generate available years (current year and next 3 years)
-  const generateYears = () => {
-    const currentYear = new Date().getFullYear();
-    return [
-      currentYear.toString(),
-      (currentYear + 1).toString(),
-      (currentYear + 2).toString(),
-      (currentYear + 3).toString()
-    ];
   };
 
   const getStepContent = () => {
@@ -283,46 +307,35 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
                 <ChevronDown className="h-4 w-4 ml-1" />
               </button>
               
-              {/* Quarter and Year Selector Dropdown */}
+              {/* Quarter Selector Dropdown - Simplified to only show current and next quarter */}
               {showQuarterSelector && (
                 <div className="absolute right-0 top-10 mt-1 w-64 bg-white rounded-md shadow-lg z-10 quarter-dropdown">
                   <div className="p-4">
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Select Quarter & Year</h3>
-                    <div className="mb-4">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Quarter</label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {['Q1', 'Q2', 'Q3', 'Q4'].map((quarter) => (
-                          <button
-                            key={quarter}
-                            onClick={() => handleQuarterSelection(quarter)}
-                            className={`text-xs py-1.5 rounded-md ${
-                              selectedQuarter === quarter
-                                ? 'bg-blue-100 text-blue-700 font-medium'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                          >
-                            {quarter}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Year</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {generateYears().map((year) => (
-                          <button
-                            key={year}
-                            onClick={() => handleYearSelection(year)}
-                            className={`text-xs py-1.5 rounded-md ${
-                              selectedYear === year
-                                ? 'bg-blue-100 text-blue-700 font-medium'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                          >
-                            {year}
-                          </button>
-                        ))}
-                      </div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Select Quarter</h3>
+                    <div className="space-y-2">
+                      {availableQuarters.map((quarterInfo, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleQuarterSelection(index)}
+                          className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+                            selectedQuarterIndex === index
+                              ? 'bg-blue-100 text-blue-700 font-medium'
+                              : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          {quarterInfo.label}
+                          {index === currentQuarterIndex && (
+                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                              Current
+                            </span>
+                          )}
+                          {index === currentQuarterIndex + 1 && (
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
+                              Next
+                            </span>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
