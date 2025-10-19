@@ -43,6 +43,7 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
   });
   const [metricToDelete, setMetricToDelete] = useState<{ index: number; name: string } | null>(null);
   const [showConfirmDeleteMetric, setShowConfirmDeleteMetric] = useState(false);
+  const [isGeneratingMetrics, setIsGeneratingMetrics] = useState(false);
 
   // Sample data for long-term outcomes (3-5 years)
   const [longTermOutcomes, setLongTermOutcomes] = useState<Outcome[]>([
@@ -418,6 +419,152 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
   // Get child outcomes for a given parent outcome
   const getChildOutcomes = (parentId: string) => {
     return midTermOutcomes.filter(outcome => outcome.parentOutcomeId === parentId);
+  };
+
+  // Generate AI recommended metrics based on the outcome
+  const generateAIRecommendedMetrics = () => {
+    if (!editingOutcome) return;
+    
+    setIsGeneratingMetrics(true);
+    
+    // Simulate AI generating metrics with a delay
+    setTimeout(() => {
+      const title = editingOutcome.title.toLowerCase();
+      const timeframe = editingOutcome.timeframe;
+      let recommendedMetrics: Metric[] = [];
+      
+      // Generate different metrics based on the outcome content and timeframe
+      if (title.includes("platform") || title.includes("data-driven") || title.includes("insights")) {
+        recommendedMetrics = [
+          {
+            name: 'Platform adoption rate',
+            current: timeframe === 'long-term' ? '0' : '15',
+            target: timeframe === 'long-term' ? '95' : '75',
+            unit: '%',
+            status: 'on-track'
+          },
+          {
+            name: 'Data sources integrated',
+            current: timeframe === 'long-term' ? '2' : '4',
+            target: timeframe === 'long-term' ? '20' : '12',
+            unit: 'sources',
+            status: 'on-track'
+          },
+          {
+            name: 'Decision quality improvement',
+            current: timeframe === 'long-term' ? '0' : '10',
+            target: timeframe === 'long-term' ? '40' : '25',
+            unit: '%',
+            status: 'on-track'
+          }
+        ];
+      } else if (title.includes("user") || title.includes("customer") || title.includes("research") || title.includes("feedback")) {
+        recommendedMetrics = [
+          {
+            name: 'User satisfaction score',
+            current: timeframe === 'long-term' ? '3.2' : '3.5',
+            target: timeframe === 'long-term' ? '4.8' : '4.2',
+            unit: 'out of 5',
+            status: 'on-track'
+          },
+          {
+            name: 'Research-backed features',
+            current: timeframe === 'long-term' ? '40' : '60',
+            target: timeframe === 'long-term' ? '95' : '85',
+            unit: '%',
+            status: 'on-track'
+          },
+          {
+            name: 'Customer retention',
+            current: timeframe === 'long-term' ? '82' : '85',
+            target: timeframe === 'long-term' ? '95' : '90',
+            unit: '%',
+            status: 'on-track'
+          }
+        ];
+      } else if (title.includes("collaboration") || title.includes("team") || title.includes("workflow")) {
+        recommendedMetrics = [
+          {
+            name: 'Cross-team collaboration score',
+            current: timeframe === 'long-term' ? '65' : '70',
+            target: timeframe === 'long-term' ? '90' : '85',
+            unit: '%',
+            status: 'on-track'
+          },
+          {
+            name: 'Shared planning sessions',
+            current: timeframe === 'long-term' ? '4' : '6',
+            target: timeframe === 'long-term' ? '16' : '12',
+            unit: 'per quarter',
+            status: 'on-track'
+          },
+          {
+            name: 'Workflow efficiency improvement',
+            current: timeframe === 'long-term' ? '0' : '10',
+            target: timeframe === 'long-term' ? '35' : '25',
+            unit: '%',
+            status: 'on-track'
+          }
+        ];
+      } else if (title.includes("delivery") || title.includes("performance") || title.includes("productivity")) {
+        recommendedMetrics = [
+          {
+            name: 'Delivery lead time',
+            current: timeframe === 'long-term' ? '14' : '10',
+            target: timeframe === 'long-term' ? '3' : '5',
+            unit: 'days',
+            status: 'on-track'
+          },
+          {
+            name: 'Deployment frequency',
+            current: timeframe === 'long-term' ? '2' : '5',
+            target: timeframe === 'long-term' ? '20' : '15',
+            unit: 'per month',
+            status: 'on-track'
+          },
+          {
+            name: 'Change failure rate',
+            current: timeframe === 'long-term' ? '15' : '12',
+            target: timeframe === 'long-term' ? '5' : '7',
+            unit: '%',
+            status: 'on-track'
+          }
+        ];
+      } else {
+        // Default metrics if no specific keywords are found
+        recommendedMetrics = [
+          {
+            name: 'Implementation progress',
+            current: timeframe === 'long-term' ? '0' : '20',
+            target: '100',
+            unit: '%',
+            status: 'on-track'
+          },
+          {
+            name: 'Stakeholder satisfaction',
+            current: timeframe === 'long-term' ? '3.0' : '3.5',
+            target: timeframe === 'long-term' ? '4.5' : '4.2',
+            unit: 'out of 5',
+            status: 'on-track'
+          },
+          {
+            name: 'Business impact',
+            current: timeframe === 'long-term' ? '0' : '15',
+            target: timeframe === 'long-term' ? '40' : '30',
+            unit: '%',
+            status: 'on-track'
+          }
+        ];
+      }
+      
+      // Add the recommended metrics to the existing metrics
+      setEditingOutcome({
+        ...editingOutcome,
+        metrics: [...editingOutcome.metrics, ...recommendedMetrics]
+      });
+      
+      setIsGeneratingMetrics(false);
+    }, 1500);
   };
 
   return (
@@ -1025,13 +1172,27 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Measurements
                   </label>
-                  <button
-                    onClick={handleAddMetric}
-                    className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-700 hover:bg-blue-50"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Measurement
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={generateAIRecommendedMetrics}
+                      disabled={isGeneratingMetrics}
+                      className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md ${
+                        isGeneratingMetrics 
+                          ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                          : 'text-blue-700 bg-blue-100 hover:bg-blue-200'
+                      }`}
+                    >
+                      <RefreshCw className={`h-3 w-3 mr-1 ${isGeneratingMetrics ? 'animate-spin' : ''}`} />
+                      {isGeneratingMetrics ? 'Generating...' : 'Generate AI Measurements'}
+                    </button>
+                    <button
+                      onClick={handleAddMetric}
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-700 hover:bg-blue-50"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Measurement
+                    </button>
+                  </div>
                 </div>
                 
                 {editingOutcome.metrics.length > 0 ? (
