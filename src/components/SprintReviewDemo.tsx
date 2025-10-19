@@ -13,7 +13,6 @@ import {
   Download,
   AlertCircle
 } from 'lucide-react';
-import Header from './Header';
 import Sidebar from './Sidebar';
 import AIAssistant from './AIAssistant';
 import { OutcomeData, BacklogItem, ReleaseNote } from '../types';
@@ -145,7 +144,6 @@ Thank you for your continued support and feedback!
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center mb-6">
