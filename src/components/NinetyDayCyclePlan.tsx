@@ -172,11 +172,6 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
           <BacklogPlanningStep 
             shortTermOutcomes={shortTermOutcomes}
             designAgentUrl={designAgentUrl}
-            recommendedEpics={recommendedEpics}
-            setRecommendedEpics={setRecommendedEpics}
-            backlogItems={unassignedBacklogItems}
-            upcomingCycleItems={upcomingCycleItems}
-            setUpcomingCycleItems={setUpcomingCycleItems}
             onNext={nextStep}
             onBack={prevStep}
           />

@@ -34,7 +34,7 @@ const InnovationSprintStep: React.FC<InnovationSprintStepProps> = ({
     setSkipInnovationSprint(true);
   };
   
-  const isNextDisabled = !skipInnovationSprint && (!sprintCompleted || !designAgentUrl);
+  // Removed the isNextDisabled condition to allow proceeding without completing the sprint
 
   return (
     <div className="space-y-6">
@@ -126,15 +126,17 @@ const InnovationSprintStep: React.FC<InnovationSprintStepProps> = ({
                     id="design-agent-url"
                     value={designAgentUrl}
                     onChange={(e) => setDesignAgentUrl(e.target.value)}
-                    disabled={!sprintCompleted}
                     placeholder="https://preview.....cloud.bayer.com/"
-                    className={`block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                      !sprintCompleted ? 'bg-gray-100 cursor-not-allowed' : ''
-                    }`}
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Paste the URL of the concept that you created during your Innovation Sprint.
                   </p>
+                </div>
+                
+                {/* Added note about optional fields */}
+                <div className="mt-2 text-xs text-gray-500 italic">
+                  Note: You can continue to the next step without completing the Innovation Sprint or providing a Design Agent URL.
                 </div>
               </div>
             </div>
@@ -184,12 +186,7 @@ const InnovationSprintStep: React.FC<InnovationSprintStepProps> = ({
           </button>
           <button
             onClick={onNext}
-            disabled={isNextDisabled}
-            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-              isNextDisabled 
-                ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
           >
             Continue to Backlog Planning
             <ArrowRight className="h-4 w-4 ml-2" />
