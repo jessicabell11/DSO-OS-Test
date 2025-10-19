@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
 
   React.useEffect(() => {
     // Auto-expand DSO Tools section if any of its items are active
-    const dsoToolIds = ['team-setup', '90-day-cycle', 'sprint-plan', 'daily-standup', 'sprint-review', 'cycle-retrospective'];
+    const dsoToolIds = ['long-mid-term-outcomes', 'team-setup', '90-day-cycle', 'sprint-plan', 'daily-standup', 'sprint-review', 'cycle-retrospective'];
     if (dsoToolIds.includes(activeTab)) {
       setDsoToolsExpanded(true);
     }
@@ -91,6 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   ];
 
   const dsoToolsItems = [
+    { id: 'long-mid-term-outcomes', name: 'Long & Mid-Term Outcomes', icon: <Target size={20} />, path: getNavPath('/long-mid-term-outcomes'), isLink: true },
     { id: 'team-setup', name: 'Team Setup', icon: <Settings size={20} />, path: getNavPath('/team-setup'), isLink: true },
     { id: '90-day-cycle', name: '90-Day Cycle Plan', icon: <Calendar size={20} />, path: getNavPath('/90-day-cycle'), isLink: true },
     { id: 'sprint-plan', name: 'Sprint Plan', icon: <Clock size={20} />, path: getNavPath('/sprint-plan'), isLink: true },

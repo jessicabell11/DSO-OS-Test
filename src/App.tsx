@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import TeamDescriptionSection from './components/TeamDescriptionSection';
 import TeamMembersSection from './components/TeamMembersSection';
@@ -17,6 +17,7 @@ import SprintReviewDemo from './components/SprintReviewDemo';
 import CycleRetrospective from './components/CycleRetrospective';
 import TeamsExplorerPage from './components/TeamsExplorerPage';
 import TeamDashboard from './components/TeamDashboard';
+import LongMidTermOutcomes from './components/LongMidTermOutcomes';
 import AIAssistant from './components/AIAssistant';
 import Stepper from './components/Stepper';
 import { Rocket } from 'lucide-react';
@@ -37,6 +38,7 @@ function Dashboard() {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Create a ref to track if we're manually setting the active tab
   const manualTabChange = useRef(false);
@@ -158,9 +160,21 @@ function Dashboard() {
   }, [location]);
 
   const handleStepClick = (index: number) => {
-    // Navigate to Sprint Review & Demo when clicking on step #6 (index 5)
-    if (index === 5) {
-      window.location.href = '/sprint-review';
+    // Navigate to appropriate screen based on step index
+    if (index === 0) {
+      navigate('/long-mid-term-outcomes');
+    } else if (index === 1) {
+      navigate('/team-setup');
+    } else if (index === 2) {
+      navigate('/90-day-cycle');
+    } else if (index === 3) {
+      navigate('/sprint-plan');
+    } else if (index === 4) {
+      navigate('/daily-standup');
+    } else if (index === 5) {
+      navigate('/sprint-review');
+    } else if (index === 6) {
+      navigate('/cycle-retrospective');
     }
   };
 
@@ -232,6 +246,7 @@ function Dashboard() {
                 <Stepper 
                   steps={teamWorkflowSteps} 
                   currentStep={3} 
+                  onStepClick={handleStepClick}
                 />
               </div>
             </div>
@@ -288,6 +303,7 @@ function AppWithRouter() {
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/team-setup" element={<TeamSetupPage />} />
+      <Route path="/long-mid-term-outcomes" element={<LongMidTermOutcomes />} />
       <Route path="/90-day-cycle" element={
         <NinetyDayCyclePlan 
           outcomes={outcomeData} 
@@ -364,6 +380,7 @@ function AppWithRouter() {
       <Route path="/teams" element={<TeamsExplorerPage />} />
       <Route path="/teams/:teamId" element={<TeamDashboard />} />
       <Route path="/teams/:teamId/team-setup" element={<TeamSetupPage />} />
+      <Route path="/teams/:teamId/long-mid-term-outcomes" element={<LongMidTermOutcomes />} />
       <Route path="/teams/:teamId/90-day-cycle" element={
         <NinetyDayCyclePlan 
           outcomes={outcomeData} 

@@ -90,3 +90,110 @@ export interface TeamMember {
   };
   projects?: string[];
 }
+
+export interface Outcome {
+  id: string;
+  title: string;
+  description: string;
+  metrics: Metric[];
+  timeframe?: 'long-term' | 'mid-term' | 'short-term';
+  parentOutcomeId?: string;
+}
+
+export interface Metric {
+  name: string;
+  current: string;
+  target: string;
+  unit: string;
+  status: 'on-track' | 'at-risk' | 'off-track';
+}
+
+export interface OutcomeData {
+  longTerm: string[];
+  midTerm: string[];
+  shortTerm: string[];
+}
+
+export interface ProgressData {
+  cycleTime: number;
+  deploymentFrequency: number;
+  leadTime: number;
+  mttr: number;
+  defectRate: number;
+  teamHealth: number;
+}
+
+export interface BacklogItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  effort: 'small' | 'medium' | 'large';
+  impact: 'high' | 'medium' | 'low';
+  assignee?: string;
+  dueDate?: string;
+  status: 'not-started' | 'in-progress' | 'blocked' | 'completed';
+  tags: string[];
+}
+
+export interface ReleaseNote {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  version: string;
+  features: string[];
+  bugfixes: string[];
+  improvements: string[];
+}
+
+export interface ProductAdoptionData {
+  userResearch: UserResearch[];
+  recommendations: Recommendation[];
+  metrics: {
+    activeUsers: number;
+    activeUsersChange: number;
+    retentionRate: number;
+    retentionRateChange: number;
+    engagementScore: number;
+    engagementScoreChange: number;
+    nps: number;
+    npsChange: number;
+  };
+}
+
+export interface UserResearch {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  participants: number;
+  findings: string[];
+  recommendations: string[];
+}
+
+export interface Recommendation {
+  id: string;
+  title: string;
+  description: string;
+  impact: string;
+  effort: string;
+  timeframe: string;
+}
+
+export interface RelatedTeam {
+  id: string;
+  name: string;
+  description: string;
+  relationship: 'upstream' | 'downstream' | 'peer';
+  dependencies: string[];
+}
+
+export interface AccomplishmentData {
+  title: string;
+  description: string;
+  date: string;
+  type: 'accomplishment' | 'learning';
+  impact: string;
+  team: string[];
+}
