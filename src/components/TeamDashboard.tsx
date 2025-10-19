@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import Header from './Header';
 import TeamDescriptionSection from './TeamDescriptionSection';
 import TeamMembersSection from './TeamMembersSection';
 import OutcomesSection from './OutcomesSection';
@@ -243,7 +242,6 @@ const TeamDashboard: React.FC = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header toggleSidebar={toggleSidebar} sidebarCollapsed={sidebarCollapsed} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-4">
