@@ -144,18 +144,30 @@ Thank you for your continued support and feedback!
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center mb-6">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div className="flex items-center">
               <button 
                 onClick={() => navigate('/')} 
-                className="mr-4 p-2 rounded-full hover:bg-gray-200"
+                className="text-blue-600 hover:text-blue-800 mr-4"
               >
                 <ArrowLeft size={20} />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">Sprint Review & Demo</h1>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <Calendar className="h-6 w-6 mr-2 text-blue-500" />
+                  Sprint Review & Demo
+                </h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  Review sprint outcomes and generate release notes
+                </p>
+              </div>
             </div>
+          </div>
+        </header>
 
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - 90-Day Cycle Outcomes */}
               <div className="lg:col-span-1">

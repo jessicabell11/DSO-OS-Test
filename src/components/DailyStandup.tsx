@@ -190,14 +190,14 @@ const DailyStandup: React.FC<DailyStandupProps> = ({ backlog }) => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-        <div className="border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <div className="flex items-center">
-              <Link to="/" className="mr-4 text-gray-500 hover:text-gray-700">
+              <Link to="/" className="text-blue-600 hover:text-blue-800 mr-4">
                 <ArrowLeft size={20} />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+                <h1 className="text-xl font-semibold text-gray-900 flex items-center">
                   <MessageSquare className="h-6 w-6 mr-2 text-blue-500" />
                   Daily Standup
                 </h1>
