@@ -18,19 +18,12 @@ const InnovationSprintStep: React.FC<InnovationSprintStepProps> = ({
   onNext,
   onBack
 }) => {
-  const [hasExistingProject, setHasExistingProject] = useState<boolean | null>(null);
-  const [projectUrl, setProjectUrl] = useState('');
   const [sprintCompleted, setSprintCompleted] = useState(false);
   const [skipInnovationSprint, setSkipInnovationSprint] = useState(false);
   
   const handleOpenInnovationSprint = () => {
-    // Construct the innovation sprint URL from the project URL
-    const baseUrl = projectUrl.trim();
-    const sprintUrl = `${baseUrl}/drawboard/8-innovation-sprint-template`;
-    setInnovationSprintUrl(sprintUrl);
-    
-    // Simulate opening a new tab
-    window.open(sprintUrl, '_blank');
+    // Open the innovation sprint URL in a new tab
+    window.open(innovationSprintUrl, '_blank');
   };
   
   const handleSprintComplete = () => {
@@ -80,132 +73,42 @@ const InnovationSprintStep: React.FC<InnovationSprintStepProps> = ({
                 </p>
               </div>
               
-              {/* Digital Product Journey Project Selection */}
-              {hasExistingProject === null && (
-                <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 mb-6">
-                  <h3 className="text-md font-medium text-gray-900 mb-4">Digital Product Journey Project</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Do you already have a project created in Digital Product Journey to plan and manage your backlog?
-                  </p>
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={() => setHasExistingProject(true)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                    >
-                      Yes, I have a project
-                    </button>
-                    <button
-                      onClick={() => setHasExistingProject(false)}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      No, I need to create one
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {/* Existing Project URL Input */}
-              {hasExistingProject === true && (
-                <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 mb-6">
-                  <h3 className="text-md font-medium text-gray-900 mb-4">Enter Your Digital Product Journey Project URL</h3>
-                  <div className="mb-4">
-                    <label htmlFor="project-url" className="block text-sm font-medium text-gray-700 mb-1">
-                      Project URL
-                    </label>
-                    <input
-                      type="text"
-                      id="project-url"
-                      value={projectUrl}
-                      onChange={(e) => setProjectUrl(e.target.value)}
-                      placeholder="https://dpj.int.bayer.com/projects/your-project-name"
-                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Example: https://dpj.int.bayer.com/projects/your-project-name
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Create New Project Instructions */}
-              {hasExistingProject === false && (
-                <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 mb-6">
-                  <h3 className="text-md font-medium text-gray-900 mb-4">Create a Digital Product Journey Project</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Please follow these steps to create a new project in Digital Product Journey:
-                  </p>
-                  <ol className="list-decimal pl-5 space-y-2 text-sm text-gray-600 mb-6">
-                    <li>Go to <a href="https://dpj.int.bayer.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">Digital Product Journey</a></li>
-                    <li>Follow the onboarding workflow to create a new project</li>
-                    <li>Once your project is created, return here and enter your project URL</li>
-                  </ol>
-                  
-                  <div className="flex items-center mb-6">
-                    <a 
-                      href="https://dpj.int.bayer.com/" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Go to Digital Product Journey
-                    </a>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="new-project-url" className="block text-sm font-medium text-gray-700 mb-1">
-                      Enter your new project URL when ready
-                    </label>
-                    <input
-                      type="text"
-                      id="new-project-url"
-                      value={projectUrl}
-                      onChange={(e) => setProjectUrl(e.target.value)}
-                      placeholder="https://dpj.int.bayer.com/projects/your-project-name"
-                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-              )}
-              
               {/* Innovation Sprint Instructions - Simplified */}
-              {(projectUrl && hasExistingProject !== null) && (
-                <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 mb-6">
-                  <h3 className="text-md font-medium text-gray-900 mb-4">Run Your Innovation Sprint</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Use the Innovation Sprint template to ideate with your team. 
-                    The template will guide you through a structured process to generate and validate ideas 
-                    for your upcoming cycle.
-                  </p>
+              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 mb-6">
+                <h3 className="text-md font-medium text-gray-900 mb-4">Run Your Innovation Sprint</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Use the Innovation Sprint template to ideate with your team. 
+                  The template will guide you through a structured process to generate and validate ideas 
+                  for your upcoming cycle.
+                </p>
+                
+                <div className="flex items-center mb-6">
+                  <button
+                    onClick={handleOpenInnovationSprint}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 mr-3"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open Innovation Sprint Template
+                  </button>
                   
-                  <div className="flex items-center mb-6">
-                    <button
-                      onClick={handleOpenInnovationSprint}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 mr-3"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Open Innovation Sprint Template
-                    </button>
-                    
-                    <button
-                      onClick={handleSprintComplete}
-                      disabled={sprintCompleted}
-                      className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                        sprintCompleted ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
-                    >
-                      {sprintCompleted ? (
-                        <>
-                          <span className="mr-2">✓</span>
-                          Sprint Completed
-                        </>
-                      ) : (
-                        'Mark Sprint as Completed'
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleSprintComplete}
+                    disabled={sprintCompleted}
+                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                      sprintCompleted ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
+                  >
+                    {sprintCompleted ? (
+                      <>
+                        <span className="mr-2">✓</span>
+                        Sprint Completed
+                      </>
+                    ) : (
+                      'Mark Sprint as Completed'
+                    )}
+                  </button>
                 </div>
-              )}
+              </div>
               
               {/* Design Agent URL Input - Updated text */}
               <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
