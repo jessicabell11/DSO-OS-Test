@@ -16,7 +16,6 @@ import {
   Send,
   Layout
 } from 'lucide-react';
-import Header from './Header';
 import Sidebar from './Sidebar';
 import AIAssistant from './AIAssistant';
 import RetrospectiveWhiteboard from './RetrospectiveWhiteboard';
@@ -246,7 +245,6 @@ Thank you to everyone who contributed to this successful cycle!
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center mb-6">
