@@ -18,7 +18,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Grid,
-  Rocket
+  Rocket,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { teamsData } from '../data/teamsData';
@@ -30,6 +32,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const [collapsed, setCollapsed] = React.useState(false);
+  const [dsoToolsExpanded, setDsoToolsExpanded] = React.useState(false);
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId?: string }>();
   const [team, setTeam] = React.useState<any>(null);
@@ -46,8 +49,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     }
   }, [teamId]);
 
+  React.useEffect(() => {
+    // Auto-expand DSO Tools section if any of its items are active
+    const dsoToolIds = ['team-setup', '90-day-cycle', 'sprint-plan', 'daily-standup', 'sprint-review', 'cycle-retrospective'];
+    if (dsoToolIds.includes(activeTab)) {
+      setDsoToolsExpanded(true);
+    }
+  }, [activeTab]);
+
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
+  };
+
+  const toggleDsoTools = () => {
+    setDsoToolsExpanded(!dsoToolsExpanded);
   };
 
   const navigateToDashboardSection = (sectionId: string, tabId: string) => {
@@ -63,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     return teamId ? `/teams/${teamId}${path}` : path;
   };
 
-  const navItems = [
+  const mainNavItems = [
     { id: 'teams-explorer', name: 'Teams Explorer', icon: <Grid size={20} />, path: '/teams', isLink: true, alwaysShow: true },
     { id: 'dashboard', name: 'Team Description', icon: <LayoutDashboard size={20} />, action: () => navigateToDashboardSection('team-description-section', 'dashboard'), isLink: false },
     { id: 'team', name: 'Team Members', icon: <Users size={20} />, action: () => navigateToDashboardSection('team-members-section', 'team'), isLink: false },
@@ -73,6 +88,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     { id: 'accomplishments', name: 'Release Notes', icon: <Award size={20} />, action: () => navigateToDashboardSection('release-notes-section', 'accomplishments'), isLink: false },
     { id: 'backlog', name: 'Output Backlog', icon: <ListTodo size={20} />, action: () => navigateToDashboardSection('backlog-section', 'backlog'), isLink: false },
     { id: 'related-teams', name: 'Related Teams', icon: <Share2 size={20} />, action: () => navigateToDashboardSection('related-teams-section', 'related-teams'), isLink: false },
+  ];
+
+  const dsoToolsItems = [
     { id: 'team-setup', name: 'Team Setup', icon: <Settings size={20} />, path: getNavPath('/team-setup'), isLink: true },
     { id: '90-day-cycle', name: '90-Day Cycle Plan', icon: <Calendar size={20} />, path: getNavPath('/90-day-cycle'), isLink: true },
     { id: 'sprint-plan', name: 'Sprint Plan', icon: <Clock size={20} />, path: getNavPath('/sprint-plan'), isLink: true },
@@ -85,7 +103,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     <div className={`hidden md:flex flex-col ${collapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative`}>
       <div className="flex flex-col flex-1 overflow-y-auto pt-4">
         <nav className="flex-1 px-2 py-4 space-y-1">
-          {navItems.map((item) => {
+          {/* Main navigation items */}
+          {mainNavItems.map((item) => {
             // Skip items that shouldn't be shown based on context
             if (!item.alwaysShow && item.id === 'teams-explorer' && !teamId) {
               return null;
@@ -122,6 +141,61 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
               </button>
             );
           })}
+
+          {/* DSO Journey Tools section */}
+          <div className="pt-2">
+            <button
+              onClick={toggleDsoTools}
+              className={`flex items-center px-4 py-2 text-sm font-medium rounded-md w-full text-gray-600 hover:bg-gray-100 ${collapsed ? 'justify-center' : ''}`}
+              title={collapsed ? "DSO Journey Tools" : ''}
+            >
+              <span className={collapsed ? '' : 'mr-3'}><Rocket size={20} /></span>
+              {!collapsed && (
+                <>
+                  <span className="flex-1">DSO Journey Tools</span>
+                  {dsoToolsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </>
+              )}
+            </button>
+
+            {/* DSO Journey Tools items */}
+            {dsoToolsExpanded && !collapsed && (
+              <div className="ml-4 mt-1 space-y-1">
+                {dsoToolsItems.map((item) => (
+                  <Link
+                    key={item.id}
+                    to={item.path || '/'}
+                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md w-full ${
+                      activeTab === item.id
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setActiveTab(item.id)}
+                  >
+                    <span className="mr-3">{item.icon}</span>
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Show icons only when sidebar is collapsed */}
+            {collapsed && dsoToolsItems.map((item) => (
+              <Link
+                key={item.id}
+                to={item.path || '/'}
+                className={`flex items-center px-4 py-2 text-sm font-medium rounded-md w-full justify-center ${
+                  activeTab === item.id
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                } mt-1`}
+                title={item.name}
+                onClick={() => setActiveTab(item.id)}
+              >
+                {item.icon}
+              </Link>
+            ))}
+          </div>
         </nav>
       </div>
       <button 
