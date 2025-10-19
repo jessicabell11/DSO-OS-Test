@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Calendar, Target, Users, MessageSquare, ListTodo, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Target, Users, MessageSquare, ListTodo, Clock, CheckCircle, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { OutcomeData, UserResearchInsight, Recommendation, BacklogItem } from '../types';
 import AIAssistant from './AIAssistant';
@@ -45,6 +45,11 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   // State for confirmation modal
   const [showConfirmation, setShowConfirmation] = useState(false);
+  // State for quarter selector dropdown
+  const [showQuarterSelector, setShowQuarterSelector] = useState(false);
+  // State for selected quarter and year
+  const [selectedQuarter, setSelectedQuarter] = useState("Q4");
+  const [selectedYear, setSelectedYear] = useState("2025");
   
   // Filter backlog items for different panels
   const previousCycleItems = items.filter(item => 
@@ -67,7 +72,7 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
   );
 
   // Get the upcoming quarter and year for display
-  const upcomingQuarter = "Q4 2025"; // Hardcoded to match the value in BacklogPlanningStep
+  const upcomingQuarter = `${selectedQuarter} ${selectedYear}`;
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -147,6 +152,29 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
     setShowConfirmation(false);
   };
 
+  // Handle quarter selection
+  const handleQuarterSelection = (quarter: string) => {
+    setSelectedQuarter(quarter);
+    setShowQuarterSelector(false);
+  };
+
+  // Handle year selection
+  const handleYearSelection = (year: string) => {
+    setSelectedYear(year);
+    setShowQuarterSelector(false);
+  };
+
+  // Generate available years (current year and next 3 years)
+  const generateYears = () => {
+    const currentYear = new Date().getFullYear();
+    return [
+      currentYear.toString(),
+      (currentYear + 1).toString(),
+      (currentYear + 2).toString(),
+      (currentYear + 3).toString()
+    ];
+  };
+
   const getStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -177,6 +205,7 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
             designAgentUrl={designAgentUrl}
             onNext={nextStep}
             onBack={prevStep}
+            upcomingQuarter={upcomingQuarter}
           />
         );
       case 4:
@@ -198,6 +227,7 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
             selectedTeams={selectedTeams}
             onBack={prevStep}
             onFinalize={handleFinalizePlan}
+            upcomingQuarter={upcomingQuarter}
           />
         );
       default:
@@ -214,6 +244,21 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
     "Review & Finalize"
   ];
 
+  // Close quarter selector when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.quarter-selector') && !target.closest('.quarter-dropdown')) {
+        setShowQuarterSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -229,10 +274,59 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
                 90-Day Cycle Planning
               </h1>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">
+            <div className="flex items-center space-x-2 relative quarter-selector">
+              <button 
+                onClick={() => setShowQuarterSelector(!showQuarterSelector)}
+                className="text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-md flex items-center"
+              >
                 Planning for {upcomingQuarter}
-              </span>
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </button>
+              
+              {/* Quarter and Year Selector Dropdown */}
+              {showQuarterSelector && (
+                <div className="absolute right-0 top-10 mt-1 w-64 bg-white rounded-md shadow-lg z-10 quarter-dropdown">
+                  <div className="p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Select Quarter & Year</h3>
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Quarter</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {['Q1', 'Q2', 'Q3', 'Q4'].map((quarter) => (
+                          <button
+                            key={quarter}
+                            onClick={() => handleQuarterSelection(quarter)}
+                            className={`text-xs py-1.5 rounded-md ${
+                              selectedQuarter === quarter
+                                ? 'bg-blue-100 text-blue-700 font-medium'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {quarter}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Year</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {generateYears().map((year) => (
+                          <button
+                            key={year}
+                            onClick={() => handleYearSelection(year)}
+                            className={`text-xs py-1.5 rounded-md ${
+                              selectedYear === year
+                                ? 'bg-blue-100 text-blue-700 font-medium'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">

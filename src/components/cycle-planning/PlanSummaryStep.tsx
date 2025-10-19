@@ -1,302 +1,231 @@
 import React from 'react';
-import { CheckCircle, ArrowLeft, Calendar, Target, ListTodo, Users } from 'lucide-react';
-import { Outcome, BacklogItem, RelatedTeam } from '../../types';
-import { relatedTeamsData } from '../../data/relatedTeamsData';
+import { ArrowLeft, CheckCircle, Calendar, Target, Users, ListTodo } from 'lucide-react';
+import { BacklogItem, Outcome } from '../../types';
 
 interface PlanSummaryStepProps {
   shortTermOutcomes: Outcome[];
   upcomingCycleItems: BacklogItem[];
-  selectedTeams?: string[]; // New prop for selected teams
+  selectedTeams: string[];
   onBack: () => void;
   onFinalize: () => void;
+  upcomingQuarter?: string; // Make this prop optional with a default value
 }
 
 const PlanSummaryStep: React.FC<PlanSummaryStepProps> = ({
   shortTermOutcomes,
   upcomingCycleItems,
-  selectedTeams = [], // Default to empty array if not provided
+  selectedTeams,
   onBack,
-  onFinalize
+  onFinalize,
+  upcomingQuarter = "Q4 2025" // Default value if not provided
 }) => {
-  // Get the upcoming quarter and year for naming
-  const getUpcomingQuarter = () => {
-    const now = new Date();
-    let quarter = Math.floor(now.getMonth() / 3) + 1;
-    let year = now.getFullYear();
-    
-    // Get next quarter
-    quarter += 1;
-    if (quarter > 4) {
-      quarter = 1;
-      year += 1;
-    }
-    
-    return `Q${quarter} ${year}`;
-  };
+  // Calculate total story points
+  const totalStoryPoints = upcomingCycleItems.reduce((total, item) => total + (item.estimate || 0), 0);
   
-  const upcomingQuarter = getUpcomingQuarter();
+  // Count epics and features
+  const epicCount = upcomingCycleItems.filter(item => item.workPackageType === 'epic').length;
+  const featureCount = upcomingCycleItems.filter(item => item.workPackageType === 'feature').length;
   
-  // Calculate start and end dates for the upcoming quarter
-  const getQuarterDates = () => {
-    const now = new Date();
-    let quarter = Math.floor(now.getMonth() / 3) + 1;
-    let year = now.getFullYear();
-    
-    // Get next quarter
-    quarter += 1;
-    if (quarter > 4) {
-      quarter = 1;
-      year += 1;
-    }
-    
-    const startMonth = (quarter - 1) * 3;
-    const startDate = new Date(year, startMonth, 1);
-    const endDate = new Date(year, startMonth + 3, 0);
-    
-    return {
-      start: startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      end: endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-    };
-  };
+  // Group items by priority
+  const highPriorityItems = upcomingCycleItems.filter(item => item.priority === 'high');
+  const mediumPriorityItems = upcomingCycleItems.filter(item => item.priority === 'medium');
+  const lowPriorityItems = upcomingCycleItems.filter(item => item.priority === 'low');
   
-  const quarterDates = getQuarterDates();
-  
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Get selected team details
-  const selectedTeamDetails = relatedTeamsData.filter(team => selectedTeams.includes(team.id));
-
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow">
         <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
             <CheckCircle className="h-5 w-5 mr-2 text-blue-500" />
-            Step 5: Review & Finalize Your 90-Day Cycle Plan
+            Step 5: Review & Finalize Your Plan
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Review your plan for the upcoming 90-day cycle and finalize it
+            Review your 90-day cycle plan before finalizing
           </p>
         </div>
         
         <div className="p-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-              <div className="flex items-center">
-                <Calendar className="h-5 w-5 text-blue-500 mr-2" />
-                <h3 className="text-md font-medium text-blue-800">{upcomingQuarter} Cycle Plan</h3>
-              </div>
-              <p className="mt-1 text-sm text-blue-600">
-                {quarterDates.start} - {quarterDates.end}
-              </p>
-            </div>
+          <div className="mb-8">
+            <h3 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+              {upcomingQuarter} Cycle Summary
+            </h3>
             
-            <div className="space-y-8">
-              {/* Outcomes Summary */}
-              <div>
-                <div className="flex items-center mb-4">
-                  <Target className="h-5 w-5 text-blue-500 mr-2" />
-                  <h3 className="text-md font-medium text-gray-900">Short-Term Outcomes</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-blue-800 mb-1">Work Packages</h4>
+                <div className="flex items-baseline">
+                  <span className="text-2xl font-bold text-blue-900">{upcomingCycleItems.length}</span>
+                  <span className="ml-2 text-sm text-blue-700">total items</span>
                 </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <ul className="divide-y divide-gray-200">
-                    {shortTermOutcomes.map((outcome, index) => (
-                      <li key={index} className="p-4">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0 pt-0.5">
-                            <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-medium">
-                              {index + 1}
-                            </div>
-                          </div>
-                          <div className="ml-3 flex-1">
-                            <p className="text-sm font-medium text-gray-900">{outcome.title}</p>
-                            <p className="mt-1 text-sm text-gray-500">{outcome.description}</p>
-                            
-                            {outcome.metrics.length > 0 && (
-                              <div className="mt-2">
-                                <h4 className="text-xs font-medium text-gray-700 mb-1">Key Measurements:</h4>
-                                <ul className="space-y-1">
-                                  {outcome.metrics.map((metric, mIndex) => (
-                                    <li key={mIndex} className="text-xs text-gray-600">
-                                      • {metric.name}: {metric.target} (currently {metric.current})
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              
-              {/* Backlog Summary */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <ListTodo className="h-5 w-5 text-blue-500 mr-2" />
-                    <h3 className="text-md font-medium text-gray-900">{upcomingQuarter} Backlog Items</h3>
+                <div className="mt-2 text-xs text-blue-700">
+                  <div className="flex justify-between">
+                    <span>Epics:</span>
+                    <span className="font-medium">{epicCount}</span>
                   </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {upcomingCycleItems.length} items
-                  </span>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <ul className="divide-y divide-gray-200">
-                    {upcomingCycleItems.map((item, index) => (
-                      <li key={item.id} className="p-4">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0 pt-0.5">
-                            <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-medium">
-                              {index + 1}
-                            </div>
-                          </div>
-                          <div className="ml-3 flex-1">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
-                                {item.priority}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-sm text-gray-500">{item.description}</p>
-                            
-                            <div className="mt-2 flex items-center space-x-2">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Effort: {item.effort}
-                              </span>
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Impact: {item.impact}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex justify-between">
+                    <span>Features:</span>
+                    <span className="font-medium">{featureCount}</span>
+                  </div>
                 </div>
               </div>
               
-              {/* Team Connections Summary - Enhanced with selected teams */}
-              <div>
-                <div className="flex items-center mb-4">
-                  <Users className="h-5 w-5 text-blue-500 mr-2" />
-                  <h3 className="text-md font-medium text-gray-900">Team Connections</h3>
+              <div className="bg-green-50 border border-green-100 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-green-800 mb-1">Story Points</h4>
+                <div className="flex items-baseline">
+                  <span className="text-2xl font-bold text-green-900">{totalStoryPoints}</span>
+                  <span className="ml-2 text-sm text-green-700">total points</span>
                 </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  {selectedTeamDetails.length > 0 ? (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        You've selected the following teams to collaborate with during this cycle:
-                      </p>
-                      <div className="space-y-4">
-                        {selectedTeamDetails.map(team => (
-                          <div key={team.id} className="flex items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="flex-shrink-0 mr-3">
-                              <img 
-                                src={team.logo} 
-                                alt={`${team.name} logo`}
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-medium text-gray-900">{team.name}</h4>
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
-                                  {team.relationshipType === 'outcome' ? 'Outcome Alignment' : 
-                                   team.relationshipType === 'backlog' ? 'Backlog Synergy' :
-                                   team.relationshipType === 'capability' ? 'Capability Provider' : 'Multiple Connections'}
-                                </span>
-                              </div>
-                              <p className="mt-1 text-xs text-gray-500">{team.description}</p>
-                              <div className="mt-2 flex items-center">
-                                <div className="flex-shrink-0 h-6 w-6 rounded-full overflow-hidden mr-2">
-                                  <img 
-                                    src={team.contactPerson.avatar} 
-                                    alt={team.contactPerson.name}
-                                    className="h-full w-full object-cover"
-                                  />
-                                </div>
-                                <span className="text-xs text-gray-600">
-                                  Contact: {team.contactPerson.name}, {team.contactPerson.role}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-600">
-                      No teams have been selected for collaboration in this cycle. Consider connecting with relevant teams to help achieve your outcomes.
-                    </p>
-                  )}
+                <div className="mt-2 text-xs text-green-700">
+                  <div className="flex justify-between">
+                    <span>Avg per item:</span>
+                    <span className="font-medium">
+                      {upcomingCycleItems.length > 0 
+                        ? (totalStoryPoints / upcomingCycleItems.length).toFixed(1) 
+                        : '0'}
+                    </span>
+                  </div>
                 </div>
               </div>
               
-              {/* Next Steps */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h3 className="text-md font-medium text-gray-900 mb-2">Next Steps</h3>
-                <p className="text-sm text-gray-600">
-                  After finalizing your 90-day cycle plan, you should:
-                </p>
-                <ul className="mt-2 space-y-1">
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span className="text-sm text-gray-600">Share the plan with your team and stakeholders</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span className="text-sm text-gray-600">Break down backlog items into smaller tasks</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span className="text-sm text-gray-600">Set up regular check-ins to track progress against outcomes</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span className="text-sm text-gray-600">Schedule mid-cycle review to assess progress and make adjustments</span>
-                  </li>
-                  {selectedTeamDetails.length > 0 && (
-                    <li className="flex items-start">
-                      <span className="text-green-500 mr-2">✓</span>
-                      <span className="text-sm text-gray-600">Reach out to connected teams to establish collaboration</span>
-                    </li>
-                  )}
-                </ul>
+              <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-purple-800 mb-1">Priority Breakdown</h4>
+                <div className="mt-2 text-xs text-purple-700">
+                  <div className="flex justify-between">
+                    <span>High Priority:</span>
+                    <span className="font-medium">{highPriorityItems.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Medium Priority:</span>
+                    <span className="font-medium">{mediumPriorityItems.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Low Priority:</span>
+                    <span className="font-medium">{lowPriorityItems.length}</span>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+          
+          <div className="mb-8">
+            <h3 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+              <Target className="h-4 w-4 mr-2 text-blue-500" />
+              Short-Term Outcomes
+            </h3>
             
-            <div className="mt-8 flex justify-between">
-              <button
-                onClick={onBack}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Team Connections
-              </button>
-              <button
-                onClick={onFinalize}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-              >
-                Finalize 90-Day Cycle Plan
-              </button>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+              <ul className="divide-y divide-gray-200">
+                {shortTermOutcomes.map((outcome, index) => (
+                  <li key={index} className="p-4">
+                    <h4 className="text-sm font-medium text-gray-900">{outcome}</h4>
+                  </li>
+                ))}
+              </ul>
             </div>
+          </div>
+          
+          <div className="mb-8">
+            <h3 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+              <ListTodo className="h-4 w-4 mr-2 text-blue-500" />
+              Backlog Items
+            </h3>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Priority
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Points
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {upcomingCycleItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-4 py-2 text-sm text-gray-900">
+                          {item.title}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-500">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            item.workPackageType === 'epic' 
+                              ? 'bg-purple-100 text-purple-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {item.workPackageType === 'epic' ? 'Epic' : 'Feature'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-sm">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            item.priority === 'high' 
+                              ? 'bg-red-100 text-red-800' 
+                              : item.priority === 'medium'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800'
+                          }`}>
+                            {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-500">
+                          {item.estimate}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mb-8">
+            <h3 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+              <Users className="h-4 w-4 mr-2 text-blue-500" />
+              Connected Teams
+            </h3>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              {selectedTeams.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedTeams.map((team, index) => (
+                    <span 
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800"
+                    >
+                      {team}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No teams connected to this cycle plan.</p>
+              )}
+            </div>
+          </div>
+          
+          <div className="mt-8 flex justify-between">
+            <button
+              onClick={onBack}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Team Connections
+            </button>
+            <button
+              onClick={onFinalize}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Finalize {upcomingQuarter} Plan
+              <CheckCircle className="h-4 w-4 ml-2" />
+            </button>
           </div>
         </div>
       </div>

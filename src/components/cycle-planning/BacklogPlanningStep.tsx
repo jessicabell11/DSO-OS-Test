@@ -11,32 +11,16 @@ interface BacklogPlanningStepProps {
   designAgentUrl: string;
   onBack: () => void;
   onNext: () => void;
+  upcomingQuarter?: string; // Make this prop optional with a default value
 }
 
 const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
   shortTermOutcomes,
   designAgentUrl,
   onBack,
-  onNext
+  onNext,
+  upcomingQuarter = "Q4 2025" // Default value if not provided
 }) => {
-  // Get the upcoming quarter and year for naming
-  const getUpcomingQuarter = () => {
-    const now = new Date();
-    let quarter = Math.floor(now.getMonth() / 3) + 1;
-    let year = now.getFullYear();
-    
-    // Get next quarter
-    quarter += 1;
-    if (quarter > 4) {
-      quarter = 1;
-      year += 1;
-    }
-    
-    return `Q${quarter} ${year}`;
-  };
-  
-  const upcomingQuarter = "Q4 2025"; // Hardcoded as requested
-  
   // State for backlog items
   const [productBacklogItems, setProductBacklogItems] = useState<BacklogItem[]>([]);
   const [upcomingCycleItems, setUpcomingCycleItems] = useState<BacklogItem[]>([]);
@@ -602,7 +586,7 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
               onDragEnd={handleDragEnd}
             >
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Q4 2025 Backlog - On the left */}
+                {/* Upcoming Quarter Backlog - On the left */}
                 <div className="lg:col-span-5">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg overflow-hidden">
                     <div className="px-4 py-3 bg-blue-100 border-b border-blue-200 flex justify-between items-center">
