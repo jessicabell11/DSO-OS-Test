@@ -37,9 +37,9 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
     what: { valid: boolean; message: string };
     why: { valid: boolean; message: string };
   }>({
-    who: { valid: true, message: '' },
-    what: { valid: true, message: '' },
-    why: { valid: true, message: '' }
+    who: { valid: false, message: 'Missing who will be impacted' },
+    what: { valid: false, message: 'Missing what impact is targeted' },
+    why: { valid: false, message: 'Missing why this matters' }
   });
   const [metricToDelete, setMetricToDelete] = useState<{ index: number; name: string } | null>(null);
   const [showConfirmDeleteMetric, setShowConfirmDeleteMetric] = useState(false);
@@ -213,13 +213,23 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
 
   // Handle adding a new outcome
   const handleAddOutcome = (timeframe: 'long-term' | 'mid-term') => {
-    setEditingOutcome(newOutcomeTemplate(timeframe));
+    const newOutcome = newOutcomeTemplate(timeframe);
+    setEditingOutcome(newOutcome);
+    // Reset validation feedback to show red X's by default
+    setValidationFeedback({
+      who: { valid: false, message: 'Missing who will be impacted' },
+      what: { valid: false, message: 'Missing what impact is targeted' },
+      why: { valid: false, message: 'Missing why this matters' }
+    });
     setShowAddOutcomeModal(true);
   };
 
   // Handle editing an existing outcome
   const handleEditOutcome = (outcome: Outcome) => {
     setEditingOutcome({ ...outcome });
+    // Validate the existing outcome text when editing
+    const validation = validateOutcome(outcome.title);
+    setValidationFeedback(validation);
     setShowAddOutcomeModal(true);
   };
 
