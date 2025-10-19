@@ -110,6 +110,12 @@ const TeamSetupPage: React.FC = () => {
   const [selectedGeneratedLogo, setSelectedGeneratedLogo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Confirmation dialog state
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmDialogTitle, setConfirmDialogTitle] = useState('');
+  const [confirmDialogMessage, setConfirmDialogMessage] = useState('');
+  const [confirmDialogAction, setConfirmDialogAction] = useState<() => void>(() => {});
+
   const DPJ_DOCUMENTATION_URL = "https://bayergroup.sharepoint.com/sites/026557/SitePages/Technology%20%26%20Engineering/Engineering%20Enablement%20site/openproject_techdoc.aspx?siteid={5CD3A45F-1F48-4F51-A74C-D96928B44568}&webid={E522E984-78F4-4F8F-887D-9244724C8A62}&uniqueid={86603172-74D0-43DA-92FE-6488ADE20191}";
 
   // Load team data when component mounts or teamId changes
@@ -275,13 +281,22 @@ const TeamSetupPage: React.FC = () => {
   };
 
   const handleDeleteSection = (sectionId: string) => {
-    if (confirm('Are you sure you want to delete this section?')) {
-      setWorkingAgreement(prev => ({
-        ...prev,
-        sections: prev.sections.filter(section => section.id !== sectionId),
-        lastUpdated: new Date().toISOString()
-      }));
-      showSuccess('Section deleted successfully');
+    // Find the section to get its title
+    const sectionToDelete = workingAgreement.sections.find(section => section.id === sectionId);
+    
+    if (sectionToDelete) {
+      showConfirmationDialog(
+        'Delete Section',
+        `Are you sure you want to delete the "${sectionToDelete.title}" section? This action cannot be undone.`,
+        () => {
+          setWorkingAgreement(prev => ({
+            ...prev,
+            sections: prev.sections.filter(section => section.id !== sectionId),
+            lastUpdated: new Date().toISOString()
+          }));
+          showSuccess('Section deleted successfully');
+        }
+      );
     }
   };
 
@@ -465,30 +480,39 @@ const TeamSetupPage: React.FC = () => {
   };
 
   const handleDeleteInfoLink = (linkId: string) => {
-    if (confirm('Are you sure you want to delete this link?')) {
-      setWorkingAgreement(prev => ({
-        ...prev,
-        teamInfoLinks: (prev.teamInfoLinks || []).filter(link => link.id !== linkId),
-        lastUpdated: new Date().toISOString()
-      }));
-      
-      // Also update the team data
-      if (team && team.teamInfoLinks) {
-        const updatedTeam = {
-          ...team,
-          teamInfoLinks: team.teamInfoLinks.filter(link => link.id !== linkId)
-        };
-        
-        // Update the team in teamsData array
-        const teamIndex = teamsData.findIndex(t => t.id === team.id);
-        if (teamIndex !== -1) {
-          teamsData[teamIndex] = updatedTeam;
+    // Find the link to get its title
+    const linkToDelete = workingAgreement.teamInfoLinks?.find(link => link.id === linkId);
+    
+    if (linkToDelete) {
+      showConfirmationDialog(
+        'Delete Team Information Link',
+        `Are you sure you want to delete the "${linkToDelete.title}" link? This action cannot be undone.`,
+        () => {
+          setWorkingAgreement(prev => ({
+            ...prev,
+            teamInfoLinks: (prev.teamInfoLinks || []).filter(link => link.id !== linkId),
+            lastUpdated: new Date().toISOString()
+          }));
+          
+          // Also update the team data
+          if (team && team.teamInfoLinks) {
+            const updatedTeam = {
+              ...team,
+              teamInfoLinks: team.teamInfoLinks.filter(link => link.id !== linkId)
+            };
+            
+            // Update the team in teamsData array
+            const teamIndex = teamsData.findIndex(t => t.id === team.id);
+            if (teamIndex !== -1) {
+              teamsData[teamIndex] = updatedTeam;
+            }
+            
+            setTeam(updatedTeam);
+          }
+          
+          showSuccess('Team information link deleted successfully');
         }
-        
-        setTeam(updatedTeam);
-      }
-      
-      showSuccess('Team information link deleted successfully');
+      );
     }
   };
 
@@ -674,6 +698,23 @@ const TeamSetupPage: React.FC = () => {
     setTimeout(() => {
       setShowErrorMessage(false);
     }, 5000);
+  };
+
+  // Confirmation dialog handler
+  const showConfirmationDialog = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmDialogTitle(title);
+    setConfirmDialogMessage(message);
+    setConfirmDialogAction(() => onConfirm);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmDialogConfirm = () => {
+    confirmDialogAction();
+    setShowConfirmDialog(false);
+  };
+
+  const handleConfirmDialogCancel = () => {
+    setShowConfirmDialog(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -902,8 +943,14 @@ const TeamSetupPage: React.FC = () => {
                       {logoUrl && (
                         <button
                           onClick={() => {
-                            setLogoUrl('');
-                            updateTeamLogo('');
+                            showConfirmationDialog(
+                              'Remove Team Logo',
+                              'Are you sure you want to remove the team logo?',
+                              () => {
+                                setLogoUrl('');
+                                updateTeamLogo('');
+                              }
+                            );
                           }}
                           className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
@@ -1735,6 +1782,41 @@ const TeamSetupPage: React.FC = () => {
         <div className="fixed bottom-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 shadow-md rounded-md flex items-center">
           <AlertCircle className="h-5 w-5 mr-2" />
           <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">{confirmDialogTitle}</h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">{confirmDialogMessage}</p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                onClick={handleConfirmDialogConfirm}
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDialogCancel}
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
