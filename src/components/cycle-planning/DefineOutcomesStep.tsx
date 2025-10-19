@@ -25,9 +25,9 @@ const DefineOutcomesStep: React.FC<DefineOutcomesStepProps> = ({
     what: { valid: boolean; message: string };
     why: { valid: boolean; message: string };
   }>({
-    who: { valid: true, message: '' },
-    what: { valid: true, message: '' },
-    why: { valid: true, message: '' }
+    who: { valid: false, message: 'Missing who will be impacted' },
+    what: { valid: false, message: 'Missing what impact is targeted' },
+    why: { valid: false, message: 'Missing why this matters' }
   });
 
   // AI-suggested outcomes
@@ -550,6 +550,17 @@ const DefineOutcomesStep: React.FC<DefineOutcomesStepProps> = ({
     setEditingOutcome({...suggestedOutcomes[index]});
     setIsEditingSuggestion(true);
     setIsEditing(true);
+    
+    // Reset validation feedback to show red X's by default
+    setValidationFeedback({
+      who: { valid: false, message: 'Missing who will be impacted' },
+      what: { valid: false, message: 'Missing what impact is targeted' },
+      why: { valid: false, message: 'Missing why this matters' }
+    });
+    
+    // Then validate the suggestion text
+    const validation = validateOutcome(suggestedOutcomes[index].title);
+    setValidationFeedback(validation);
   };
 
   const handleSaveSuggestionEdit = () => {
@@ -584,12 +595,23 @@ const DefineOutcomesStep: React.FC<DefineOutcomesStepProps> = ({
     setEditingOutcome(newOutcome);
     setIsEditing(true);
     setIsEditingSuggestion(false);
+    
+    // Reset validation feedback to show red X's by default
+    setValidationFeedback({
+      who: { valid: false, message: 'Missing who will be impacted' },
+      what: { valid: false, message: 'Missing what impact is targeted' },
+      why: { valid: false, message: 'Missing why this matters' }
+    });
   };
 
   const handleEditOutcome = (outcome: Outcome) => {
     setEditingOutcome({...outcome});
     setIsEditing(true);
     setIsEditingSuggestion(false);
+    
+    // Validate the existing outcome text
+    const validation = validateOutcome(outcome.title);
+    setValidationFeedback(validation);
   };
 
   const handleDeleteOutcome = (outcome: Outcome) => {
@@ -608,6 +630,10 @@ const DefineOutcomesStep: React.FC<DefineOutcomesStepProps> = ({
     setEditingOutcome({...acceptedOutcomes[index]});
     setIsEditing(true);
     setIsEditingSuggestion(false);
+    
+    // Validate the existing outcome text
+    const validation = validateOutcome(acceptedOutcomes[index].title);
+    setValidationFeedback(validation);
   };
 
   // Handle deleting an accepted outcome
