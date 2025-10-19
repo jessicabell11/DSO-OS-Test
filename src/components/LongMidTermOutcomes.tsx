@@ -41,6 +41,8 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
     what: { valid: true, message: '' },
     why: { valid: true, message: '' }
   });
+  const [metricToDelete, setMetricToDelete] = useState<{ index: number; name: string } | null>(null);
+  const [showConfirmDeleteMetric, setShowConfirmDeleteMetric] = useState(false);
 
   // Sample data for long-term outcomes (3-5 years)
   const [longTermOutcomes, setLongTermOutcomes] = useState<Outcome[]>([
@@ -328,16 +330,28 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
     });
   };
 
-  // Handle removing a metric
-  const handleRemoveMetric = (index: number) => {
+  // Handle initiating metric deletion (show confirmation)
+  const handleInitiateMetricDelete = (index: number) => {
     if (!editingOutcome) return;
+    
+    const metricName = editingOutcome.metrics[index].name || 'this measurement';
+    setMetricToDelete({ index, name: metricName });
+    setShowConfirmDeleteMetric(true);
+  };
 
-    const updatedMetrics = editingOutcome.metrics.filter((_, i) => i !== index);
+  // Handle confirming metric deletion
+  const confirmDeleteMetric = () => {
+    if (!editingOutcome || metricToDelete === null) return;
+
+    const updatedMetrics = editingOutcome.metrics.filter((_, i) => i !== metricToDelete.index);
     
     setEditingOutcome({
       ...editingOutcome,
       metrics: updatedMetrics
     });
+
+    setShowConfirmDeleteMetric(false);
+    setMetricToDelete(null);
   };
 
   // Toggle expanded state for an outcome
@@ -1107,7 +1121,7 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                           </div>
                           <div className="col-span-1 flex justify-center">
                             <button
-                              onClick={() => handleRemoveMetric(index)}
+                              onClick={() => handleInitiateMetricDelete(index)}
                               className="text-gray-400 hover:text-red-600"
                               aria-label="Remove metric"
                             >
@@ -1152,7 +1166,7 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
         </div>
       )}
 
-      {/* Confirm Delete Modal */}
+      {/* Confirm Delete Outcome Modal */}
       {showConfirmDelete && outcomeToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -1179,6 +1193,42 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
               </button>
               <button
                 onClick={confirmDeleteOutcome}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Delete Metric Modal */}
+      {showConfirmDeleteMetric && metricToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="px-4 py-5 sm:px-6">
+              <h3 className="text-lg font-medium text-gray-900">Confirm Delete Measurement</h3>
+            </div>
+            <div className="px-4 py-4">
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this measurement?
+              </p>
+              <p className="mt-2 text-sm font-medium text-gray-900">
+                {metricToDelete.name || 'Unnamed measurement'}
+              </p>
+            </div>
+            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowConfirmDeleteMetric(false);
+                  setMetricToDelete(null);
+                }}
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteMetric}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
               >
                 Delete
