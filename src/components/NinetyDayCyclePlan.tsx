@@ -66,6 +66,9 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
     })
   );
 
+  // Get the upcoming quarter and year for display
+  const upcomingQuarter = "Q4 2025"; // Hardcoded to match the value in BacklogPlanningStep
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const draggedItem = items.find(item => item.id === active.id);
@@ -228,7 +231,7 @@ const NinetyDayCyclePlan: React.FC<NinetyDayCyclePlanProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">
-                Planning for Q4 2023
+                Planning for {upcomingQuarter}
               </span>
             </div>
           </div>
