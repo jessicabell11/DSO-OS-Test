@@ -1070,18 +1070,16 @@ const TeamSetupPage: React.FC = () => {
               </h1>
             </div>
             <div className="flex items-center space-x-2">
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                workingAgreement.status === 'draft' 
-                  ? 'bg-yellow-100 text-yellow-800' 
-                  : workingAgreement.status === 'active'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {workingAgreement.status.charAt(0).toUpperCase() + workingAgreement.status.slice(1)}
-              </span>
-              <span className="text-sm text-gray-500">
-                v{workingAgreement.version}
-              </span>
+              {workingAgreement.status === 'draft' && (
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                  Draft
+                </span>
+              )}
+              {workingAgreement.status === 'active' && (
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                  Active
+                </span>
+              )}
             </div>
           </div>
         </header>
