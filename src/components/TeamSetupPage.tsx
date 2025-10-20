@@ -25,15 +25,20 @@ import {
   Search,
   Image,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  UserPlus,
+  Percent,
+  UserCheck
 } from 'lucide-react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
-import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability, Team } from '../types';
+import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability, Team, TeamMember } from '../types';
 import { defaultWorkingAgreement } from '../data/teamWorkingAgreementData';
 import { coreCapabilities, enablingCapabilities, allBusinessCapabilities, getUniqueDomains } from '../data/businessCapabilitiesData';
 import { teamsData } from '../data/teamsData';
+import { teamMembers as allTeamMembers } from '../data/teamData';
 import AIAssistant from './AIAssistant';
 import Sidebar from './Sidebar';
+import TeamMembersSection from './TeamMembersSection';
 
 const TeamSetupPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -74,7 +79,7 @@ const TeamSetupPage: React.FC = () => {
   const [isDescriptionEditing, setIsDescriptionEditing] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'approvals'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'approvals' | 'team-members'>('editor');
   const [sidebarActiveTab, setSidebarActiveTab] = useState('team-setup');
   const [isBacklogLinkEditing, setIsBacklogLinkEditing] = useState(false);
   const [backlogUrl, setBacklogUrl] = useState('');
@@ -109,6 +114,20 @@ const TeamSetupPage: React.FC = () => {
   const [generatedLogos, setGeneratedLogos] = useState<string[]>([]);
   const [selectedGeneratedLogo, setSelectedGeneratedLogo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Team members state
+  const [teamMembers, setTeamMembers] = useState<Array<TeamMember & { role?: string; allocation?: number }>>([]);
+  const [isAddingTeamMember, setIsAddingTeamMember] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('');
+  const [memberRole, setMemberRole] = useState<string>('');
+  const [memberAllocation, setMemberAllocation] = useState<number>(100);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [memberSearchQuery, setMemberSearchQuery] = useState<string>('');
+  const [memberErrors, setMemberErrors] = useState<{
+    member?: string;
+    role?: string;
+    allocation?: string;
+  }>({});
 
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -167,6 +186,26 @@ const TeamSetupPage: React.FC = () => {
         } else {
           setBacklogUrl('');
           setBacklogType('digital-product-journey');
+        }
+
+        // Load team members if they exist
+        if (foundTeam.members && foundTeam.members.length > 0) {
+          // Find the full member details from allTeamMembers
+          const membersWithDetails = foundTeam.members.map(memberId => {
+            const memberDetails = allTeamMembers.find(m => m.id === memberId);
+            if (memberDetails) {
+              return {
+                ...memberDetails,
+                role: foundTeam.memberRoles?.[memberId] || '',
+                allocation: foundTeam.memberAllocations?.[memberId] || 100
+              };
+            }
+            return null;
+          }).filter(Boolean) as Array<TeamMember & { role?: string; allocation?: number }>;
+          
+          setTeamMembers(membersWithDetails);
+        } else {
+          setTeamMembers([]);
         }
       }
     }
@@ -648,6 +687,212 @@ const TeamSetupPage: React.FC = () => {
     }
   };
 
+  // Team members handlers
+  const handleAddTeamMember = () => {
+    setIsAddingTeamMember(true);
+    setSelectedMemberId('');
+    setMemberRole('');
+    setMemberAllocation(100);
+    setMemberErrors({});
+  };
+
+  const handleEditTeamMember = (memberId: string) => {
+    const member = teamMembers.find(m => m.id === memberId);
+    if (member) {
+      setEditingMemberId(memberId);
+      setSelectedMemberId(memberId);
+      setMemberRole(member.role || '');
+      setMemberAllocation(member.allocation || 100);
+      setMemberErrors({});
+    }
+  };
+
+  const validateTeamMember = (): boolean => {
+    const errors: {
+      member?: string;
+      role?: string;
+      allocation?: string;
+    } = {};
+    
+    if (!selectedMemberId) {
+      errors.member = 'Please select a team member';
+    }
+    
+    if (!memberRole.trim()) {
+      errors.role = 'Role is required';
+    }
+    
+    if (memberAllocation < 1 || memberAllocation > 100) {
+      errors.allocation = 'Allocation must be between 1% and 100%';
+    }
+    
+    setMemberErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      const errorMessages = Object.values(errors).join(', ');
+      showError(`Please fix the following: ${errorMessages}`);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSaveTeamMember = () => {
+    if (!validateTeamMember()) {
+      return;
+    }
+
+    // Find the member details from allTeamMembers
+    const memberDetails = allTeamMembers.find(m => m.id === selectedMemberId);
+    if (!memberDetails) {
+      showError('Selected team member not found');
+      return;
+    }
+
+    if (editingMemberId) {
+      // Update existing member
+      const updatedMembers = teamMembers.map(m => 
+        m.id === editingMemberId 
+          ? { ...m, role: memberRole, allocation: memberAllocation }
+          : m
+      );
+      
+      setTeamMembers(updatedMembers);
+      
+      // Update the team data
+      if (team) {
+        const memberIds = updatedMembers.map(m => m.id);
+        const memberRoles = updatedMembers.reduce((acc, m) => {
+          if (m.role) acc[m.id] = m.role;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        const memberAllocations = updatedMembers.reduce((acc, m) => {
+          if (m.allocation) acc[m.id] = m.allocation;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        const updatedTeam = {
+          ...team,
+          members: memberIds,
+          memberRoles,
+          memberAllocations
+        };
+        
+        // Update the team in teamsData array
+        const teamIndex = teamsData.findIndex(t => t.id === team.id);
+        if (teamIndex !== -1) {
+          teamsData[teamIndex] = updatedTeam;
+        }
+        
+        setTeam(updatedTeam);
+      }
+      
+      setEditingMemberId(null);
+      showSuccess('Team member updated successfully');
+    } else {
+      // Check if member already exists in the team
+      if (teamMembers.some(m => m.id === selectedMemberId)) {
+        showError('This person is already a member of the team');
+        return;
+      }
+      
+      // Add new member
+      const newMember = {
+        ...memberDetails,
+        role: memberRole,
+        allocation: memberAllocation
+      };
+      
+      const updatedMembers = [...teamMembers, newMember];
+      setTeamMembers(updatedMembers);
+      
+      // Update the team data
+      if (team) {
+        const memberIds = updatedMembers.map(m => m.id);
+        const memberRoles = updatedMembers.reduce((acc, m) => {
+          if (m.role) acc[m.id] = m.role;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        const memberAllocations = updatedMembers.reduce((acc, m) => {
+          if (m.allocation) acc[m.id] = m.allocation;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        const updatedTeam = {
+          ...team,
+          members: memberIds,
+          memberRoles,
+          memberAllocations
+        };
+        
+        // Update the team in teamsData array
+        const teamIndex = teamsData.findIndex(t => t.id === team.id);
+        if (teamIndex !== -1) {
+          teamsData[teamIndex] = updatedTeam;
+        }
+        
+        setTeam(updatedTeam);
+      }
+      
+      setIsAddingTeamMember(false);
+      showSuccess('Team member added successfully');
+    }
+  };
+
+  const handleCancelTeamMember = () => {
+    setIsAddingTeamMember(false);
+    setEditingMemberId(null);
+    setMemberErrors({});
+  };
+
+  const handleDeleteTeamMember = (memberId: string) => {
+    const memberToDelete = teamMembers.find(m => m.id === memberId);
+    
+    if (memberToDelete) {
+      showConfirmationDialog(
+        'Remove Team Member',
+        `Are you sure you want to remove ${memberToDelete.name} from the team? This action cannot be undone.`,
+        () => {
+          const updatedMembers = teamMembers.filter(m => m.id !== memberId);
+          setTeamMembers(updatedMembers);
+          
+          // Update the team data
+          if (team) {
+            const memberIds = updatedMembers.map(m => m.id);
+            const memberRoles = updatedMembers.reduce((acc, m) => {
+              if (m.role) acc[m.id] = m.role;
+              return acc;
+            }, {} as Record<string, string>);
+            
+            const memberAllocations = updatedMembers.reduce((acc, m) => {
+              if (m.allocation) acc[m.id] = m.allocation;
+              return acc;
+            }, {} as Record<string, number>);
+            
+            const updatedTeam = {
+              ...team,
+              members: memberIds,
+              memberRoles,
+              memberAllocations
+            };
+            
+            // Update the team in teamsData array
+            const teamIndex = teamsData.findIndex(t => t.id === team.id);
+            if (teamIndex !== -1) {
+              teamsData[teamIndex] = updatedTeam;
+            }
+            
+            setTeam(updatedTeam);
+          }
+          
+          showSuccess('Team member removed successfully');
+        }
+      );
+    }
+  };
+
   const filteredCapabilities = (category: 'core' | 'enabling') => {
     const capabilities = category === 'core' ? coreCapabilities : enablingCapabilities;
     
@@ -680,6 +925,23 @@ const TeamSetupPage: React.FC = () => {
     });
     
     return result;
+  };
+
+  // Filter available team members based on search query
+  const getFilteredAvailableMembers = () => {
+    const currentMemberIds = teamMembers.map(m => m.id);
+    const availableMembers = allTeamMembers.filter(m => !currentMemberIds.includes(m.id) || m.id === selectedMemberId);
+    
+    if (!memberSearchQuery) {
+      return availableMembers;
+    }
+    
+    const query = memberSearchQuery.toLowerCase();
+    return availableMembers.filter(
+      member => member.name.toLowerCase().includes(query) || 
+                member.role.toLowerCase().includes(query) ||
+                (member.department && member.department.toLowerCase().includes(query))
+    );
   };
 
   const showSuccess = (message: string) => {
@@ -1414,6 +1676,17 @@ const TeamSetupPage: React.FC = () => {
                     Editor
                   </button>
                   <button
+                    onClick={() => setActiveTab('team-members')}
+                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                      activeTab === 'team-members'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <Users className="h-5 w-5 inline mr-1" />
+                    Team Members ({teamMembers.length})
+                  </button>
+                  <button
                     onClick={() => setActiveTab('preview')}
                     className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
                       activeTab === 'preview'
@@ -1528,6 +1801,237 @@ const TeamSetupPage: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {activeTab === 'team-members' && (
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Team Members</h3>
+                    <button
+                      onClick={handleAddTeamMember}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <UserPlus className="h-4 w-4 mr-1" />
+                      Add Team Member
+                    </button>
+                  </div>
+
+                  {/* Add/Edit Team Member Form */}
+                  {(isAddingTeamMember || editingMemberId) && (
+                    <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-900 mb-4">
+                        {editingMemberId ? 'Edit Team Member' : 'Add Team Member'}
+                      </h4>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label htmlFor="member-select" className="block text-sm font-medium text-gray-700">
+                            Team Member <span className="text-red-500">*</span>
+                          </label>
+                          <div className="mt-1 relative">
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-gray-400" />
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="Search members..."
+                                value={memberSearchQuery}
+                                onChange={(e) => setMemberSearchQuery(e.target.value)}
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              />
+                            </div>
+                            
+                            <div className="mt-2 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-sm">
+                              {getFilteredAvailableMembers().map(member => (
+                                <div
+                                  key={member.id}
+                                  className={`flex items-center p-2 cursor-pointer hover:bg-blue-50 ${
+                                    selectedMemberId === member.id ? 'bg-blue-50' : ''
+                                  }`}
+                                  onClick={() => setSelectedMemberId(member.id)}
+                                >
+                                  <div className="flex-shrink-0">
+                                    {member.avatar ? (
+                                      <img 
+                                        src={member.avatar} 
+                                        alt={member.name} 
+                                        className="h-8 w-8 rounded-full"
+                                      />
+                                    ) : (
+                                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <Users className="h-4 w-4 text-gray-500" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-3">
+                                    <p className="text-sm font-medium text-gray-900">{member.name}</p>
+                                    <p className="text-xs text-gray-500">{member.role}</p>
+                                  </div>
+                                  {selectedMemberId === member.id && (
+                                    <div className="ml-auto">
+                                      <CheckCircle className="h-5 w-5 text-blue-500" />
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              
+                              {getFilteredAvailableMembers().length === 0 && (
+                                <div className="p-4 text-center text-gray-500">
+                                  No members found matching your search
+                                </div>
+                              )}
+                            </div>
+                            
+                            {memberErrors.member && (
+                              <p className="mt-1 text-xs text-red-600">{memberErrors.member}</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="member-role" className="block text-sm font-medium text-gray-700">
+                            Role on Team <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="member-role"
+                            value={memberRole}
+                            onChange={(e) => setMemberRole(e.target.value)}
+                            placeholder="e.g., Developer, Scrum Master, Product Owner"
+                            className={`mt-1 block w-full border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                              memberErrors.role ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                          />
+                          {memberErrors.role && (
+                            <p className="mt-1 text-xs text-red-600">{memberErrors.role}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="member-allocation" className="block text-sm font-medium text-gray-700">
+                            Allocation (%)
+                          </label>
+                          <div className="mt-1 flex items-center">
+                            <input
+                              type="number"
+                              id="member-allocation"
+                              value={memberAllocation}
+                              onChange={(e) => setMemberAllocation(Number(e.target.value))}
+                              min="1"
+                              max="100"
+                              className={`block w-24 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                                memberErrors.allocation ? 'border-red-300' : 'border-gray-300'
+                              }`}
+                            />
+                            <Percent className="ml-2 h-4 w-4 text-gray-400" />
+                            <span className="ml-2 text-sm text-gray-500">
+                              {memberAllocation < 100 ? 'Part-time' : 'Full-time'}
+                            </span>
+                          </div>
+                          {memberErrors.allocation && (
+                            <p className="mt-1 text-xs text-red-600">{memberErrors.allocation}</p>
+                          )}
+                        </div>
+                        
+                        <div className="flex space-x-2 pt-2">
+                          <button
+                            onClick={handleSaveTeamMember}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <Save size={16} className="mr-1" />
+                            {editingMemberId ? 'Update Member' : 'Add Member'}
+                          </button>
+                          <button
+                            onClick={handleCancelTeamMember}
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <X size={16} className="mr-1" />
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Team Members List */}
+                  {teamMembers.length > 0 ? (
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                      <ul className="divide-y divide-gray-200">
+                        {teamMembers.map((member) => (
+                          <li key={member.id}>
+                            <div className="px-4 py-4 flex items-center justify-between">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                  {member.avatar ? (
+                                    <img 
+                                      src={member.avatar} 
+                                      alt={member.name} 
+                                      className="h-10 w-10 rounded-full"
+                                    />
+                                  ) : (
+                                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                      <Users className="h-5 w-5 text-gray-500" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="ml-4">
+                                  <div className="flex items-center">
+                                    <h4 className="text-sm font-medium text-gray-900">{member.name}</h4>
+                                    <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      member.availability === 'available' ? 'bg-green-100 text-green-800' :
+                                      member.availability === 'busy' ? 'bg-red-100 text-red-800' :
+                                      member.availability === 'away' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {member.availability.charAt(0).toUpperCase() + member.availability.slice(1)}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 flex items-center text-sm text-gray-500">
+                                    <span className="truncate">{member.role || 'No role specified'}</span>
+                                    <span className="mx-1">•</span>
+                                    <span>{member.allocation || 100}% allocated</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditTeamMember(member.id)}
+                                  className="inline-flex items-center p-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                  <Edit3 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTeamMember(member.id)}
+                                  className="inline-flex items-center p-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                  <Trash size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                      <UserCheck className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No team members</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Get started by adding team members to your team.
+                      </p>
+                      <div className="mt-6">
+                        <button
+                          onClick={handleAddTeamMember}
+                          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Add Team Member
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {activeTab === 'preview' && (
                 <div className="p-6">
@@ -1550,6 +2054,46 @@ const TeamSetupPage: React.FC = () => {
                       }`}>
                         {workingAgreement.status.charAt(0).toUpperCase() + workingAgreement.status.slice(1)}
                       </span>
+                    </div>
+                    
+                    {/* Team Members in Preview */}
+                    <div className="mb-6">
+                      <h2 className="text-lg font-medium text-gray-900 mb-3">Team Members</h2>
+                      {teamMembers.length > 0 ? (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {teamMembers.map(member => (
+                              <div key={member.id} className="bg-white p-3 rounded-md border border-gray-200">
+                                <div className="flex items-center">
+                                  {member.avatar ? (
+                                    <img 
+                                      src={member.avatar} 
+                                      alt={member.name} 
+                                      className="h-8 w-8 rounded-full"
+                                    />
+                                  ) : (
+                                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                      <Users className="h-4 w-4 text-gray-500" />
+                                    </div>
+                                  )}
+                                  <div className="ml-3">
+                                    <h3 className="text-sm font-medium">{member.name}</h3>
+                                    <p className="text-xs text-gray-500">{member.role || 'No role specified'}</p>
+                                  </div>
+                                </div>
+                                <div className="mt-2 text-xs text-gray-600">
+                                  <div className="flex items-center justify-between">
+                                    <span>Allocation:</span>
+                                    <span className="font-medium">{member.allocation || 100}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">No team members added yet.</p>
+                      )}
                     </div>
                     
                     {/* Business Capabilities in Preview */}

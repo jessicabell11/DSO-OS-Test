@@ -7,6 +7,8 @@ export interface Team {
   updatedAt: string;
   status: 'active' | 'inactive' | 'archived';
   members: string[];
+  memberRoles?: Record<string, string>;
+  memberAllocations?: Record<string, number>;
   businessCapabilities: string[];
   workingAgreementId?: string;
   metrics?: {
