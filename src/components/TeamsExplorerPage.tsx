@@ -343,18 +343,6 @@ const TeamsExplorerPage: React.FC = () => {
                             <Briefcase className="h-4 w-4 mr-1 text-gray-400" />
                             <span>Capabilities: {getCapabilityNames(team.businessCapabilities)}</span>
                           </div>
-                          {team.metrics && (
-                            <>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <Activity className="h-4 w-4 mr-1 text-gray-400" />
-                                <span>Cycle Time: {team.metrics.cycleTime} days</span>
-                              </div>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <BarChart className="h-4 w-4 mr-1 text-gray-400" />
-                                <span>Team Health: {team.metrics.teamHealth}%</span>
-                              </div>
-                            </>
-                          )}
                         </div>
                       </div>
                     </li>
