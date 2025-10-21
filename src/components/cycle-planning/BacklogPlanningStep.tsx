@@ -34,7 +34,6 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
   const [newItemTitle, setNewItemTitle] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');
   const [newItemPriority, setNewItemPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [newItemEstimate, setNewItemEstimate] = useState<number>(5);
   const [newItemWorkPackageType, setNewItemWorkPackageType] = useState<'epic' | 'feature'>('feature');
   const [newItemEpicId, setNewItemEpicId] = useState<string | null>(null);
   
@@ -495,7 +494,6 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
     setNewItemTitle('');
     setNewItemDescription('');
     setNewItemPriority('medium');
-    setNewItemEstimate(5);
     setNewItemWorkPackageType('feature');
     setNewItemEpicId(null);
   };
@@ -519,7 +517,7 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
       status: 'todo',
       tags: [],
       assignee: null,
-      estimate: newItemEstimate,
+      estimate: 0, // Set a default value but we won't display it
       workPackageType: newItemWorkPackageType,
       epicId: newItemWorkPackageType === 'feature' ? newItemEpicId : null
     };
@@ -671,28 +669,6 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                               </div>
                               
                               <div>
-                                <label htmlFor="upcoming-estimate" className="block text-xs font-medium text-gray-700 mb-1">
-                                  Estimate (points)
-                                </label>
-                                <select
-                                  id="upcoming-estimate"
-                                  value={newItemEstimate}
-                                  onChange={(e) => setNewItemEstimate(Number(e.target.value))}
-                                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                  <option value="1">1</option>
-                                  <option value="2">2</option>
-                                  <option value="3">3</option>
-                                  <option value="5">5</option>
-                                  <option value="8">8</option>
-                                  <option value="13">13</option>
-                                  <option value="21">21</option>
-                                </select>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
                                 <label htmlFor="upcoming-type" className="block text-xs font-medium text-gray-700 mb-1">
                                   Work Package Type
                                 </label>
@@ -706,28 +682,28 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                                   <option value="feature">Feature</option>
                                 </select>
                               </div>
-                              
-                              {newItemWorkPackageType === 'feature' && (
-                                <div>
-                                  <label htmlFor="upcoming-epic" className="block text-xs font-medium text-gray-700 mb-1">
-                                    Parent Epic
-                                  </label>
-                                  <select
-                                    id="upcoming-epic"
-                                    value={newItemEpicId || ''}
-                                    onChange={(e) => setNewItemEpicId(e.target.value || null)}
-                                    className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                  >
-                                    <option value="">None</option>
-                                    {allEpics.map(epic => (
-                                      <option key={epic.id} value={epic.id}>
-                                        {epic.title}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
                             </div>
+                            
+                            {newItemWorkPackageType === 'feature' && (
+                              <div>
+                                <label htmlFor="upcoming-epic" className="block text-xs font-medium text-gray-700 mb-1">
+                                  Parent Epic
+                                </label>
+                                <select
+                                  id="upcoming-epic"
+                                  value={newItemEpicId || ''}
+                                  onChange={(e) => setNewItemEpicId(e.target.value || null)}
+                                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                  <option value="">None</option>
+                                  {allEpics.map(epic => (
+                                    <option key={epic.id} value={epic.id}>
+                                      {epic.title}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                             
                             <div className="flex justify-end pt-2">
                               <button
@@ -904,28 +880,6 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                               </div>
                               
                               <div>
-                                <label htmlFor="product-estimate" className="block text-xs font-medium text-gray-700 mb-1">
-                                  Estimate (points)
-                                </label>
-                                <select
-                                  id="product-estimate"
-                                  value={newItemEstimate}
-                                  onChange={(e) => setNewItemEstimate(Number(e.target.value))}
-                                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                  <option value="1">1</option>
-                                  <option value="2">2</option>
-                                  <option value="3">3</option>
-                                  <option value="5">5</option>
-                                  <option value="8">8</option>
-                                  <option value="13">13</option>
-                                  <option value="21">21</option>
-                                </select>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
                                 <label htmlFor="product-type" className="block text-xs font-medium text-gray-700 mb-1">
                                   Work Package Type
                                 </label>
@@ -939,28 +893,28 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                                   <option value="feature">Feature</option>
                                 </select>
                               </div>
-                              
-                              {newItemWorkPackageType === 'feature' && (
-                                <div>
-                                  <label htmlFor="product-epic" className="block text-xs font-medium text-gray-700 mb-1">
-                                    Parent Epic
-                                  </label>
-                                  <select
-                                    id="product-epic"
-                                    value={newItemEpicId || ''}
-                                    onChange={(e) => setNewItemEpicId(e.target.value || null)}
-                                    className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                  >
-                                    <option value="">None</option>
-                                    {allEpics.map(epic => (
-                                      <option key={epic.id} value={epic.id}>
-                                        {epic.title}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
                             </div>
+                            
+                            {newItemWorkPackageType === 'feature' && (
+                              <div>
+                                <label htmlFor="product-epic" className="block text-xs font-medium text-gray-700 mb-1">
+                                  Parent Epic
+                                </label>
+                                <select
+                                  id="product-epic"
+                                  value={newItemEpicId || ''}
+                                  onChange={(e) => setNewItemEpicId(e.target.value || null)}
+                                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                  <option value="">None</option>
+                                  {allEpics.map(epic => (
+                                    <option key={epic.id} value={epic.id}>
+                                      {epic.title}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                             
                             <div className="flex justify-end pt-2">
                               <button
