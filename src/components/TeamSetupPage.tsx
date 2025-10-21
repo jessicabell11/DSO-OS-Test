@@ -28,7 +28,9 @@ import {
   MessageSquare,
   UserPlus,
   Percent,
-  UserCheck
+  UserCheck,
+  Layers,
+  Building
 } from 'lucide-react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability, Team, TeamMember } from '../types';
@@ -36,6 +38,8 @@ import { defaultWorkingAgreement } from '../data/teamWorkingAgreementData';
 import { coreCapabilities, enablingCapabilities, allBusinessCapabilities, getUniqueDomains } from '../data/businessCapabilitiesData';
 import { teamsData } from '../data/teamsData';
 import { teamMembers as allTeamMembers } from '../data/teamData';
+import { platformsList, platformCategories, getPlatformCategory, getPlatformColor } from '../data/platformsData';
+import { unitsByPlatform, getAllUnits } from '../data/unitsData';
 import AIAssistant from './AIAssistant';
 import Sidebar from './Sidebar';
 import TeamMembersSection from './TeamMembersSection';
@@ -129,6 +133,14 @@ const TeamSetupPage: React.FC = () => {
     allocation?: string;
   }>({});
 
+  // Platform and Unit state
+  const [isPlatformEditing, setIsPlatformEditing] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('');
+  const [selectedUnit, setSelectedUnit] = useState<string>('');
+  const [platformSearchQuery, setPlatformSearchQuery] = useState<string>('');
+  const [unitSearchQuery, setUnitSearchQuery] = useState<string>('');
+  const [availableUnits, setAvailableUnits] = useState<string[]>([]);
+
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmDialogTitle, setConfirmDialogTitle] = useState('');
@@ -206,6 +218,29 @@ const TeamSetupPage: React.FC = () => {
           setTeamMembers(membersWithDetails);
         } else {
           setTeamMembers([]);
+        }
+
+        // Set platform and unit if they exist
+        if (foundTeam.platform) {
+          setSelectedPlatform(foundTeam.platform);
+          
+          // Update available units based on selected platform
+          if (unitsByPlatform[foundTeam.platform]) {
+            setAvailableUnits(unitsByPlatform[foundTeam.platform]);
+          } else {
+            setAvailableUnits([]);
+          }
+          
+          // Set unit if it exists
+          if (foundTeam.unit) {
+            setSelectedUnit(foundTeam.unit);
+          } else {
+            setSelectedUnit('');
+          }
+        } else {
+          setSelectedPlatform('');
+          setSelectedUnit('');
+          setAvailableUnits([]);
         }
       }
     }
@@ -893,6 +928,94 @@ const TeamSetupPage: React.FC = () => {
     }
   };
 
+  // Platform and Unit handlers
+  const handleEditPlatform = () => {
+    setIsPlatformEditing(true);
+    setPlatformSearchQuery('');
+    setUnitSearchQuery('');
+  };
+
+  const handlePlatformSelect = (platform: string) => {
+    setSelectedPlatform(platform);
+    
+    // Update available units based on selected platform
+    if (unitsByPlatform[platform]) {
+      setAvailableUnits(unitsByPlatform[platform]);
+      setSelectedUnit(''); // Reset unit when platform changes
+    } else {
+      setAvailableUnits([]);
+      setSelectedUnit('');
+    }
+  };
+
+  const handleUnitSelect = (unit: string) => {
+    setSelectedUnit(unit);
+  };
+
+  const handleSavePlatformUnit = () => {
+    if (team) {
+      const updatedTeam = {
+        ...team,
+        platform: selectedPlatform,
+        unit: selectedUnit || undefined
+      };
+      
+      // Update the team in teamsData array
+      const teamIndex = teamsData.findIndex(t => t.id === team.id);
+      if (teamIndex !== -1) {
+        teamsData[teamIndex] = updatedTeam;
+      }
+      
+      setTeam(updatedTeam);
+      setIsPlatformEditing(false);
+      showSuccess('Team platform and unit updated successfully');
+    }
+  };
+
+  const handleCancelPlatformEdit = () => {
+    // Reset to current team values
+    if (team) {
+      setSelectedPlatform(team.platform || '');
+      
+      if (team.platform && unitsByPlatform[team.platform]) {
+        setAvailableUnits(unitsByPlatform[team.platform]);
+      } else {
+        setAvailableUnits([]);
+      }
+      
+      setSelectedUnit(team.unit || '');
+    } else {
+      setSelectedPlatform('');
+      setSelectedUnit('');
+      setAvailableUnits([]);
+    }
+    
+    setIsPlatformEditing(false);
+  };
+
+  const getFilteredPlatforms = () => {
+    if (!platformSearchQuery) {
+      return platformsList;
+    }
+    
+    const query = platformSearchQuery.toLowerCase();
+    return platformsList.filter(platform => 
+      platform.toLowerCase().includes(query) || 
+      getPlatformCategory(platform).toLowerCase().includes(query)
+    );
+  };
+
+  const getFilteredUnits = () => {
+    if (!unitSearchQuery) {
+      return availableUnits;
+    }
+    
+    const query = unitSearchQuery.toLowerCase();
+    return availableUnits.filter(unit => 
+      unit.toLowerCase().includes(query)
+    );
+  };
+
   const filteredCapabilities = (category: 'core' | 'enabling') => {
     const capabilities = category === 'core' ? coreCapabilities : enablingCapabilities;
     
@@ -1169,6 +1292,185 @@ const TeamSetupPage: React.FC = () => {
                 <div className="mt-3 flex items-center text-sm text-gray-500">
                   <Clock className="h-4 w-4 mr-1" />
                   <span>Last updated: {formatDate(workingAgreement.lastUpdated)}</span>
+                </div>
+
+                {/* Platform and Unit Section */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      <Layers className="h-4 w-4 mr-1 text-blue-500" />
+                      <h3 className="text-sm font-medium text-gray-900">Platform & Unit</h3>
+                    </div>
+                    {!isPlatformEditing && (
+                      <button
+                        onClick={handleEditPlatform}
+                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                      >
+                        <Edit3 size={16} className="mr-1" />
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {isPlatformEditing ? (
+                    <div className="space-y-4">
+                      {/* Platform Selection */}
+                      <div>
+                        <label htmlFor="platform-select" className="block text-sm font-medium text-gray-700">
+                          Platform <span className="text-red-500">*</span>
+                        </label>
+                        <div className="mt-1 relative">
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <Search className="h-4 w-4 text-gray-400" />
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Search platforms..."
+                              value={platformSearchQuery}
+                              onChange={(e) => setPlatformSearchQuery(e.target.value)}
+                              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            />
+                          </div>
+                          
+                          <div className="mt-2 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-sm">
+                            {getFilteredPlatforms().map(platform => (
+                              <div
+                                key={platform}
+                                className={`flex items-center p-2 cursor-pointer hover:bg-blue-50 ${
+                                  selectedPlatform === platform ? 'bg-blue-50' : ''
+                                }`}
+                                onClick={() => handlePlatformSelect(platform)}
+                              >
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">{platform}</p>
+                                  <p className="text-xs text-gray-500">{getPlatformCategory(platform)}</p>
+                                </div>
+                                {selectedPlatform === platform && (
+                                  <div className="ml-auto">
+                                    <CheckCircle className="h-5 w-5 text-blue-500" />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            
+                            {getFilteredPlatforms().length === 0 && (
+                              <div className="p-4 text-center text-gray-500">
+                                No platforms found matching your search
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Unit Selection (only if platform is selected) */}
+                      {selectedPlatform && (
+                        <div>
+                          <label htmlFor="unit-select" className="block text-sm font-medium text-gray-700">
+                            Unit (Optional)
+                          </label>
+                          <div className="mt-1 relative">
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-gray-400" />
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="Search units..."
+                                value={unitSearchQuery}
+                                onChange={(e) => setUnitSearchQuery(e.target.value)}
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              />
+                            </div>
+                            
+                            <div className="mt-2 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-sm">
+                              {getFilteredUnits().map(unit => (
+                                <div
+                                  key={unit}
+                                  className={`flex items-center p-2 cursor-pointer hover:bg-blue-50 ${
+                                    selectedUnit === unit ? 'bg-blue-50' : ''
+                                  }`}
+                                  onClick={() => handleUnitSelect(unit)}
+                                >
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-900">{unit}</p>
+                                  </div>
+                                  {selectedUnit === unit && (
+                                    <div className="ml-auto">
+                                      <CheckCircle className="h-5 w-5 text-blue-500" />
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              
+                              {getFilteredUnits().length === 0 && (
+                                <div className="p-4 text-center text-gray-500">
+                                  No units found matching your search
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex space-x-2 pt-2">
+                        <button
+                          onClick={handleSavePlatformUnit}
+                          disabled={!selectedPlatform}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                        >
+                          <Save size={16} className="mr-1" />
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelPlatformEdit}
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <X size={16} className="mr-1" />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 p-4 rounded-md">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-sm font-medium text-gray-700 flex items-center">
+                            <Layers className="h-4 w-4 mr-1 text-gray-500" />
+                            Platform
+                          </div>
+                          {selectedPlatform ? (
+                            <div className="mt-1">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPlatformColor(selectedPlatform)}`}>
+                                {selectedPlatform}
+                              </span>
+                              <p className="mt-1 text-xs text-gray-500">
+                                Category: {getPlatformCategory(selectedPlatform)}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="mt-1 text-sm text-gray-500">No platform selected</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <div className="text-sm font-medium text-gray-700 flex items-center">
+                            <Building className="h-4 w-4 mr-1 text-gray-500" />
+                            Unit
+                          </div>
+                          {selectedUnit ? (
+                            <div className="mt-1">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                {selectedUnit}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="mt-1 text-sm text-gray-500">No unit selected</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Team Logo Section */}
@@ -2052,6 +2354,49 @@ const TeamSetupPage: React.FC = () => {
                       }`}>
                         {workingAgreement.status.charAt(0).toUpperCase() + workingAgreement.status.slice(1)}
                       </span>
+                    </div>
+                    
+                    {/* Platform and Unit in Preview */}
+                    <div className="mb-6">
+                      <h2 className="text-lg font-medium text-gray-900 mb-3">Team Organization</h2>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                              <Layers className="h-4 w-4 mr-1 text-blue-500" />
+                              Platform
+                            </h3>
+                            {selectedPlatform ? (
+                              <div className="mt-2">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPlatformColor(selectedPlatform)}`}>
+                                  {selectedPlatform}
+                                </span>
+                                <p className="mt-1 text-xs text-gray-500">
+                                  Category: {getPlatformCategory(selectedPlatform)}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="mt-2 text-sm text-gray-500">No platform selected</p>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                              <Building className="h-4 w-4 mr-1 text-blue-500" />
+                              Unit
+                            </h3>
+                            {selectedUnit ? (
+                              <div className="mt-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                  {selectedUnit}
+                                </span>
+                              </div>
+                            ) : (
+                              <p className="mt-2 text-sm text-gray-500">No unit selected</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     
                     {/* Team Members in Preview */}
