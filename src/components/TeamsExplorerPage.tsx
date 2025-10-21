@@ -18,12 +18,14 @@ import {
   Eye,
   X,
   Save,
-  Hash
+  Hash,
+  Layers
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Team, BusinessCapability } from '../types';
 import { teamsData } from '../data/teamsData';
 import { allBusinessCapabilities } from '../data/businessCapabilitiesData';
+import { platformsList, getPlatformColor, platformCategories, getPlatformCategory } from '../data/platformsData';
 import Sidebar from './Sidebar';
 import AIAssistant from './AIAssistant';
 
@@ -32,12 +34,15 @@ const TeamsExplorerPage: React.FC = () => {
   const [filteredTeams, setFilteredTeams] = useState<Team[]>([...teamsData]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'archived'>('all');
+  const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [isAddingTeam, setIsAddingTeam] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamDescription, setNewTeamDescription] = useState('');
+  const [newTeamPlatform, setNewTeamPlatform] = useState('');
   const [sidebarActiveTab, setSidebarActiveTab] = useState('teams-explorer');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [groupByPlatform, setGroupByPlatform] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -83,12 +88,22 @@ const TeamsExplorerPage: React.FC = () => {
       result = result.filter(team => team.status === statusFilter);
     }
     
+    // Apply platform filter
+    if (platformFilter !== 'all') {
+      result = result.filter(team => team.platform === platformFilter);
+    }
+    
     setFilteredTeams(result);
-  }, [teams, searchQuery, statusFilter]);
+  }, [teams, searchQuery, statusFilter, platformFilter]);
 
   const handleCreateTeam = () => {
     if (!newTeamName.trim()) {
       alert('Team name is required');
+      return;
+    }
+
+    if (!newTeamPlatform) {
+      alert('Platform selection is required');
       return;
     }
 
@@ -100,7 +115,8 @@ const TeamsExplorerPage: React.FC = () => {
       updatedAt: new Date().toISOString(),
       status: 'active',
       members: [],
-      businessCapabilities: []
+      businessCapabilities: [],
+      platform: newTeamPlatform
     };
 
     // Update both the local state and the imported teamsData array
@@ -113,6 +129,7 @@ const TeamsExplorerPage: React.FC = () => {
     
     setNewTeamName('');
     setNewTeamDescription('');
+    setNewTeamPlatform('');
     setIsAddingTeam(false);
     
     showSuccess(`Team "${newTeamName}" created successfully`);
@@ -203,6 +220,121 @@ const TeamsExplorerPage: React.FC = () => {
     return match ? match[1] : '';
   };
 
+  // Group teams by platform
+  const getTeamsByPlatform = () => {
+    const groupedTeams: Record<string, Team[]> = {};
+    
+    filteredTeams.forEach(team => {
+      const platform = team.platform || 'Uncategorized';
+      if (!groupedTeams[platform]) {
+        groupedTeams[platform] = [];
+      }
+      groupedTeams[platform].push(team);
+    });
+    
+    return groupedTeams;
+  };
+
+  // Get all platforms that have teams
+  const getUsedPlatforms = () => {
+    const platforms = new Set<string>();
+    teams.forEach(team => {
+      if (team.platform) {
+        platforms.add(team.platform);
+      }
+    });
+    return Array.from(platforms);
+  };
+
+  // Group platforms by category
+  const getPlatformsByCategory = () => {
+    const usedPlatforms = getUsedPlatforms();
+    const result: Record<string, string[]> = {};
+    
+    usedPlatforms.forEach(platform => {
+      const category = getPlatformCategory(platform);
+      if (!result[category]) {
+        result[category] = [];
+      }
+      result[category].push(platform);
+    });
+    
+    return result;
+  };
+
+  // Render team card
+  const renderTeamCard = (team: Team) => (
+    <li key={team.id}>
+      <div className="px-4 py-4 sm:px-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            {team.logo ? (
+              <img 
+                src={team.logo} 
+                alt={`${team.name} logo`} 
+                className="h-12 w-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <Users className="h-6 w-6" />
+              </div>
+            )}
+            <div className="ml-4">
+              <div className="flex items-center">
+                <h2 className="text-lg font-medium text-gray-900">{team.name}</h2>
+                <div className="ml-2 flex items-center">
+                  {getTeamStatusBadge(team.status)}
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <Hash className="h-3 w-3 mr-1" />
+                    {getTeamIdNumber(team.id)}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-1 text-sm text-gray-500 max-w-2xl">
+                {team.description}
+              </div>
+              {team.platform && (
+                <div className="mt-1">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPlatformColor(team.platform)}`}>
+                    <Layers className="h-3 w-3 mr-1" />
+                    {team.platform}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center">
+            <button
+              onClick={() => handleViewTeam(team.id)}
+              className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md ${
+                searchParams.get('teamId') === team.id 
+                  ? 'text-blue-700 bg-blue-100 hover:bg-blue-200' 
+                  : 'text-blue-700 bg-blue-100 hover:bg-blue-200'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+            >
+              <Eye className="mr-1 h-4 w-4" />
+              View Team
+            </button>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex items-center text-sm text-gray-500">
+            <Clock className="h-4 w-4 mr-1 text-gray-400" />
+            <span>Created: {formatDate(team.createdAt)}</span>
+          </div>
+          <div className="flex items-center text-sm text-gray-500">
+            <Users className="h-4 w-4 mr-1 text-gray-400" />
+            <span>Members: {team.members?.length || 0}</span>
+          </div>
+          <div className="flex items-center text-sm text-gray-500">
+            <Briefcase className="h-4 w-4 mr-1 text-gray-400" />
+            <span>Capabilities: {getCapabilityNames(team.businessCapabilities)}</span>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={sidebarActiveTab} setActiveTab={setSidebarActiveTab} />
@@ -257,6 +389,32 @@ const TeamsExplorerPage: React.FC = () => {
                   <option value="archived">Archived</option>
                 </select>
               </div>
+              <div className="flex items-center">
+                <Layers className="h-5 w-5 text-gray-400 mr-2" />
+                <select
+                  value={platformFilter}
+                  onChange={(e) => setPlatformFilter(e.target.value)}
+                  className="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  <option value="all">All Platforms</option>
+                  {getUsedPlatforms().map(platform => (
+                    <option key={platform} value={platform}>{platform}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center">
+                <button
+                  onClick={() => setGroupByPlatform(!groupByPlatform)}
+                  className={`inline-flex items-center px-3 py-2 border ${
+                    groupByPlatform 
+                      ? 'border-blue-500 text-blue-700 bg-blue-50' 
+                      : 'border-gray-300 text-gray-700 bg-white'
+                  } rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                >
+                  <Layers className="h-4 w-4 mr-1" />
+                  {groupByPlatform ? 'Grouped by Platform' : 'Flat List'}
+                </button>
+              </div>
             </div>
 
             {/* Selected Team Indicator */}
@@ -281,96 +439,53 @@ const TeamsExplorerPage: React.FC = () => {
             )}
 
             {/* Teams List */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-              <ul className="divide-y divide-gray-200">
-                {filteredTeams.length > 0 ? (
-                  filteredTeams.map((team) => (
-                    <li key={team.id}>
-                      <div className="px-4 py-4 sm:px-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            {team.logo ? (
-                              <img 
-                                src={team.logo} 
-                                alt={`${team.name} logo`} 
-                                className="h-12 w-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                <Users className="h-6 w-6" />
-                              </div>
-                            )}
-                            <div className="ml-4">
-                              <div className="flex items-center">
-                                <h2 className="text-lg font-medium text-gray-900">{team.name}</h2>
-                                <div className="ml-2 flex items-center">
-                                  {getTeamStatusBadge(team.status)}
-                                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    <Hash className="h-3 w-3 mr-1" />
-                                    {getTeamIdNumber(team.id)}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="mt-1 text-sm text-gray-500 max-w-2xl">
-                                {team.description}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            <button
-                              onClick={() => handleViewTeam(team.id)}
-                              className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md ${
-                                searchParams.get('teamId') === team.id 
-                                  ? 'text-blue-700 bg-blue-100 hover:bg-blue-200' 
-                                  : 'text-blue-700 bg-blue-100 hover:bg-blue-200'
-                              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                            >
-                              <Eye className="mr-1 h-4 w-4" />
-                              View Team
-                            </button>
-                          </div>
+            {groupByPlatform ? (
+              // Grouped by platform
+              Object.entries(getTeamsByPlatform()).map(([platform, platformTeams]) => (
+                <div key={platform} className="mb-8">
+                  <div className="flex items-center mb-2">
+                    <Layers className="h-5 w-5 text-gray-600 mr-2" />
+                    <h2 className="text-lg font-medium text-gray-900">{platform}</h2>
+                    <span className="ml-2 text-sm text-gray-500">({platformTeams.length} teams)</span>
+                  </div>
+                  <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul className="divide-y divide-gray-200">
+                      {platformTeams.map(team => renderTeamCard(team))}
+                    </ul>
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Flat list
+              <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul className="divide-y divide-gray-200">
+                  {filteredTeams.length > 0 ? (
+                    filteredTeams.map(team => renderTeamCard(team))
+                  ) : (
+                    <li className="px-4 py-12 text-center">
+                      <Users className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No teams found</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {searchQuery || statusFilter !== 'all' || platformFilter !== 'all'
+                          ? 'Try adjusting your search or filter criteria' 
+                          : 'Get started by creating a new team'}
+                      </p>
+                      {!searchQuery && statusFilter === 'all' && platformFilter === 'all' && (
+                        <div className="mt-6">
+                          <button
+                            onClick={() => setIsAddingTeam(true)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <PlusCircle className="h-4 w-4 mr-1" />
+                            Add New Team
+                          </button>
                         </div>
-                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                            <span>Created: {formatDate(team.createdAt)}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Users className="h-4 w-4 mr-1 text-gray-400" />
-                            <span>Members: {team.members?.length || 0}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Briefcase className="h-4 w-4 mr-1 text-gray-400" />
-                            <span>Capabilities: {getCapabilityNames(team.businessCapabilities)}</span>
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </li>
-                  ))
-                ) : (
-                  <li className="px-4 py-12 text-center">
-                    <Users className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No teams found</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {searchQuery || statusFilter !== 'all' 
-                        ? 'Try adjusting your search or filter criteria' 
-                        : 'Get started by creating a new team'}
-                    </p>
-                    {!searchQuery && statusFilter === 'all' && (
-                      <div className="mt-6">
-                        <button
-                          onClick={() => setIsAddingTeam(true)}
-                          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          <PlusCircle className="h-4 w-4 mr-1" />
-                          Add New Team
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                )}
-              </ul>
-            </div>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -404,6 +519,26 @@ const TeamsExplorerPage: React.FC = () => {
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           placeholder="e.g., Digital Innovation Team"
                         />
+                      </div>
+                      <div>
+                        <label htmlFor="team-platform" className="block text-sm font-medium text-gray-700">
+                          Platform <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          id="team-platform"
+                          value={newTeamPlatform}
+                          onChange={(e) => setNewTeamPlatform(e.target.value)}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                          <option value="">Select a platform</option>
+                          {Object.entries(platformCategories).map(([category, platforms]) => (
+                            <optgroup key={category} label={category}>
+                              {platforms.map(platform => (
+                                <option key={platform} value={platform}>{platform}</option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label htmlFor="team-description" className="block text-sm font-medium text-gray-700">

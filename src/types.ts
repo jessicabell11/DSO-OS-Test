@@ -11,6 +11,7 @@ export interface Team {
   memberAllocations?: Record<string, number>;
   businessCapabilities: string[];
   workingAgreementId?: string;
+  platform?: string;
   metrics?: {
     cycleTime: number;
     deploymentFrequency?: number;

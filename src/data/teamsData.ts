@@ -16,6 +16,7 @@ export const teamsData: Team[] = [
       'enabling-digital-transformation',
       'enabling-technology-innovation'
     ],
+    platform: 'Engineering Enablement Platform',
     workingAgreementId: '1',
     metrics: {
       cycleTime: 14.3,
@@ -40,6 +41,7 @@ export const teamsData: Team[] = [
       'enabling-technology-innovation',
       'enabling-data-management'
     ],
+    platform: 'Infrastructure Platform',
     metrics: {
       cycleTime: 10.7,
       deploymentFrequency: 12.3,
@@ -63,6 +65,7 @@ export const teamsData: Team[] = [
       'deliver-customer-service',
       'market-marketing-strategy'
     ],
+    platform: 'CH Consumer & Customer Experience Platform',
     metrics: {
       cycleTime: 18.2,
       deploymentFrequency: 5.1,
@@ -86,6 +89,7 @@ export const teamsData: Team[] = [
       'enabling-analytics',
       'market-market-research'
     ],
+    platform: 'Enterprise Data & Analytics Platform',
     metrics: {
       cycleTime: 12.5,
       deploymentFrequency: 3.8,
@@ -109,6 +113,7 @@ export const teamsData: Team[] = [
       'develop-product-development',
       'develop-research'
     ],
+    platform: 'PH Drug Innovation Platform',
     metrics: {
       cycleTime: 22.7,
       deploymentFrequency: 2.1,
@@ -132,6 +137,7 @@ export const teamsData: Team[] = [
       'produce-supply-chain',
       'deliver-logistics'
     ],
+    platform: 'Integrated Planning & Logistics Platform',
     metrics: {
       cycleTime: 16.8,
       deploymentFrequency: 1.5,
@@ -155,6 +161,7 @@ export const teamsData: Team[] = [
       'market-brand-management',
       'sell-pricing-strategy'
     ],
+    platform: 'CH Consumer & Customer Experience Platform',
     metrics: {
       cycleTime: 9.5,
       deploymentFrequency: 6.8,
