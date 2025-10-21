@@ -1,7 +1,8 @@
 import React from 'react';
-import { Calendar, Clock, Users, Briefcase, BarChart, Activity } from 'lucide-react';
+import { Calendar, Clock, Users, Briefcase, BarChart, Activity, Layers, Building } from 'lucide-react';
 import { Team } from '../types';
 import { allBusinessCapabilities } from '../data/businessCapabilitiesData';
+import { getPlatformColor } from '../data/platformsData';
 
 interface TeamDescriptionSectionProps {
   team?: Team;
@@ -79,6 +80,32 @@ const TeamDescriptionSection: React.FC<TeamDescriptionSectionProps> = ({ team })
                     </span>
                   </dd>
                 </div>
+                {team?.platform && (
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500 flex items-center">
+                      <Layers className="h-4 w-4 mr-1 text-gray-400" />
+                      Platform
+                    </dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPlatformColor(team?.platform)}`}>
+                        {team?.platform}
+                      </span>
+                    </dd>
+                  </div>
+                )}
+                {team?.unit && (
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500 flex items-center">
+                      <Building className="h-4 w-4 mr-1 text-gray-400" />
+                      Unit
+                    </dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        {team?.unit}
+                      </span>
+                    </dd>
+                  </div>
+                )}
               </dl>
             </div>
             
