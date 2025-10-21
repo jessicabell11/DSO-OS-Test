@@ -44,15 +44,6 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
     high: 'bg-red-100 text-red-800',
   };
 
-  // Status color mapping
-  const statusColors = {
-    todo: 'bg-gray-100 text-gray-800',
-    'in-progress': 'bg-blue-100 text-blue-800',
-    review: 'bg-purple-100 text-purple-800',
-    completed: 'bg-green-100 text-green-800',
-    blocked: 'bg-red-100 text-red-800',
-  };
-
   // Work package type color mapping
   const workPackageTypeColors = {
     epic: 'bg-indigo-100 text-indigo-800',
@@ -128,15 +119,6 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
                 }`}
               >
                 {item.workPackageType === 'epic' ? 'Epic' : 'Feature'}
-              </span>
-            )}
-            {item.status && (
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full ${
-                  statusColors[item.status as keyof typeof statusColors] || 'bg-gray-100'
-                }`}
-              >
-                {item.status}
               </span>
             )}
           </div>
