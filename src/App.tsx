@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import TeamDescriptionSection from './components/TeamDescriptionSection';
 import TeamMembersSection from './components/TeamMembersSection';
@@ -301,7 +301,9 @@ function Dashboard() {
 function AppWithRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
+      {/* Change default route to redirect to Teams Explorer */}
+      <Route path="/" element={<Navigate to="/teams" replace />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/team-setup" element={<TeamSetupPage />} />
       <Route path="/long-mid-term-outcomes" element={<LongMidTermOutcomes />} />
       <Route path="/90-day-cycle" element={
