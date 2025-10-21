@@ -50,7 +50,7 @@ const TeamsExplorerPage: React.FC = () => {
       const teamExists = teams.some(team => team.id === teamId);
       if (teamExists) {
         // Navigate to the team dashboard
-        handleViewTeamDashboard(teamId);
+        handleViewTeam(teamId);
       } else {
         // If team doesn't exist, remove the query parameter
         searchParams.delete('teamId');
@@ -120,7 +120,7 @@ const TeamsExplorerPage: React.FC = () => {
     // Navigate to the new team's dashboard after a short delay
     // This gives time for the success message to be seen
     setTimeout(() => {
-      handleViewTeamDashboard(newTeam.id);
+      handleViewTeam(newTeam.id);
     }, 500);
   };
 
@@ -183,23 +183,18 @@ const TeamsExplorerPage: React.FC = () => {
     }, 3000);
   };
 
-  // Handle navigation to team dashboard
-  const handleViewTeamDashboard = (teamId: string) => {
+  // Handle viewing team (selects team and navigates to dashboard)
+  const handleViewTeam = (teamId: string) => {
     // Update the query string with the selected team ID
     searchParams.set('teamId', teamId);
     setSearchParams(searchParams);
     
-    // Use navigate to go to the team dashboard
+    // Show success message
+    const teamName = teams.find(t => t.id === teamId)?.name;
+    showSuccess(`Selected team: ${teamName}`);
+    
+    // Navigate to the team dashboard
     navigate(`/teams/${teamId}`);
-  };
-
-  // Handle team selection (just updates query string without navigation)
-  const handleSelectTeam = (teamId: string) => {
-    // Update the query string with the selected team ID
-    searchParams.set('teamId', teamId);
-    setSearchParams(searchParams);
-    
-    showSuccess(`Team selected: ${teams.find(t => t.id === teamId)?.name}`);
   };
 
   // Extract team ID number from team.id (e.g., "team-001" -> "001")
@@ -321,30 +316,17 @@ const TeamsExplorerPage: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center">
                             <button
-                              onClick={() => handleSelectTeam(team.id)}
+                              onClick={() => handleViewTeam(team.id)}
                               className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md ${
                                 searchParams.get('teamId') === team.id 
-                                  ? 'text-green-700 bg-green-100 hover:bg-green-200' 
-                                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                                  ? 'text-blue-700 bg-blue-100 hover:bg-blue-200' 
+                                  : 'text-blue-700 bg-blue-100 hover:bg-blue-200'
                               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                             >
-                              {searchParams.get('teamId') === team.id ? (
-                                <>
-                                  <CheckCircle className="mr-1 h-4 w-4" />
-                                  Selected
-                                </>
-                              ) : (
-                                'Select Team'
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleViewTeamDashboard(team.id)}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              View Dashboard
-                              <ChevronRight className="ml-1 h-4 w-4" />
+                              <Eye className="mr-1 h-4 w-4" />
+                              View Team
                             </button>
                           </div>
                         </div>
