@@ -37,18 +37,9 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
     title: item.title,
     description: item.description || '',
     priority: item.priority,
-    status: item.status,
     workPackageType: item.workPackageType,
-    epicId: item.epicId,
-    effort: item.effort,
-    impact: item.impact,
-    assignee: item.assignee || '',
-    dueDate: item.dueDate || '',
-    tags: [...(item.tags || [])]
+    epicId: item.epicId
   });
-
-  // New tag input state
-  const [newTag, setNewTag] = useState('');
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -68,15 +59,6 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
   const workPackageTypeColors = {
     epic: 'bg-indigo-100 text-indigo-800',
     feature: 'bg-teal-100 text-teal-800',
-  };
-
-  // Status color mapping
-  const statusColors = {
-    'not-started': 'bg-gray-100 text-gray-800',
-    'in-progress': 'bg-blue-100 text-blue-800',
-    'blocked': 'bg-red-100 text-red-800',
-    'completed': 'bg-green-100 text-green-800',
-    'todo': 'bg-gray-100 text-gray-800',
   };
 
   // Handle work package type change
@@ -118,74 +100,43 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
     }));
   };
 
-  // Handle date input change
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditableItem(prev => ({
-      ...prev,
-      [name]: value || null
-    }));
-  };
-
   // Start editing
   const handleStartEditing = () => {
     setIsEditing(true);
     setIsExpanded(true); // Always expand when editing
+    
+    // Reset editable item to current values
+    setEditableItem({
+      title: item.title,
+      description: item.description || '',
+      priority: item.priority,
+      workPackageType: item.workPackageType,
+      epicId: item.epicId
+    });
   };
 
   // Cancel editing
   const handleCancelEditing = () => {
     setIsEditing(false);
-    // Reset editable item to original values
-    setEditableItem({
-      title: item.title,
-      description: item.description || '',
-      priority: item.priority,
-      status: item.status,
-      workPackageType: item.workPackageType,
-      epicId: item.epicId,
-      effort: item.effort,
-      impact: item.impact,
-      assignee: item.assignee || '',
-      dueDate: item.dueDate || '',
-      tags: [...(item.tags || [])]
-    });
-    setNewTag('');
   };
 
   // Save changes
   const handleSaveChanges = () => {
     if (onUpdateItem && editableItem.title) {
-      onUpdateItem(item.id, editableItem);
+      // Preserve the existing values for fields we're not showing in the edit form
+      const updatedItem = {
+        ...editableItem,
+        status: item.status,
+        tags: item.tags,
+        effort: item.effort,
+        impact: item.impact,
+        assignee: item.assignee,
+        dueDate: item.dueDate
+      };
+      
+      onUpdateItem(item.id, updatedItem);
     }
     setIsEditing(false);
-  };
-
-  // Add a new tag
-  const handleAddTag = () => {
-    if (newTag.trim() && !editableItem.tags?.includes(newTag.trim())) {
-      setEditableItem(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), newTag.trim()]
-      }));
-      setNewTag('');
-    }
-  };
-
-  // Remove a tag
-  const handleRemoveTag = (tagToRemove: string) => {
-    setEditableItem(prev => ({
-      ...prev,
-      tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
-    }));
-  };
-
-  // Handle key press for tag input
-  const handleTagKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && newTag.trim()) {
-      e.preventDefault();
-      handleAddTag();
-    }
   };
 
   return (
@@ -289,44 +240,6 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
             )
           )}
 
-          {/* Tags in edit mode */}
-          {isEditing && (
-            <div className="mb-3">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Tags
-              </label>
-              <div className="flex flex-wrap gap-1 mb-2">
-                {editableItem.tags?.map((tag, index) => (
-                  <div key={index} className="flex items-center bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
-                    {tag}
-                    <button 
-                      onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 text-gray-500 hover:text-gray-700"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="flex">
-                <input
-                  type="text"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={handleTagKeyPress}
-                  className="text-xs border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 flex-1"
-                  placeholder="Add a tag"
-                />
-                <button
-                  onClick={handleAddTag}
-                  className="text-xs bg-blue-600 text-white px-2 py-1 rounded-r-md hover:bg-blue-700"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Work package type label */}
           {!isEditing && (
             <div className="flex flex-wrap gap-1 mt-2">
@@ -386,107 +299,96 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
                   </div>
                 )}
 
-                {/* Additional editable fields */}
+                {/* Priority - Always show in edit mode */}
                 {isEditing && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Priority
+                    </label>
+                    <select
+                      name="priority"
+                      value={editableItem.priority || ''}
+                      onChange={handleInputChange}
+                      className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Display-only fields when expanded but not editing */}
+                {isExpanded && !isEditing && (
                   <>
                     {/* Priority */}
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Priority
-                      </label>
-                      <select
-                        name="priority"
-                        value={editableItem.priority || ''}
-                        onChange={handleInputChange}
-                        className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
+                      <span className="block text-xs font-medium text-gray-700 mb-1">Priority</span>
+                      <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${
+                        priorityColors[item.priority as keyof typeof priorityColors] || 'bg-gray-100'
+                      }`}>
+                        {item.priority}
+                      </span>
                     </div>
-
-                    {/* Status */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Status
-                      </label>
-                      <select
-                        name="status"
-                        value={editableItem.status || ''}
-                        onChange={handleInputChange}
-                        className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="not-started">Not Started</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="blocked">Blocked</option>
-                        <option value="completed">Completed</option>
-                        <option value="todo">Todo</option>
-                      </select>
-                    </div>
-
-                    {/* Effort */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Effort
-                      </label>
-                      <select
-                        name="effort"
-                        value={editableItem.effort || ''}
-                        onChange={handleInputChange}
-                        className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="small">Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                      </select>
-                    </div>
-
-                    {/* Impact */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Impact
-                      </label>
-                      <select
-                        name="impact"
-                        value={editableItem.impact || ''}
-                        onChange={handleInputChange}
-                        className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-
-                    {/* Assignee */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Assignee
-                      </label>
-                      <input
-                        type="text"
-                        name="assignee"
-                        value={editableItem.assignee || ''}
-                        onChange={handleInputChange}
-                        className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter assignee"
-                      />
-                    </div>
-
-                    {/* Due Date */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Due Date
-                      </label>
-                      <input
-                        type="date"
-                        name="dueDate"
-                        value={editableItem.dueDate || ''}
-                        onChange={handleDateChange}
-                        className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                    
+                    {/* Status - Display only */}
+                    {item.status && (
+                      <div>
+                        <span className="block text-xs font-medium text-gray-700 mb-1">Status</span>
+                        <span className="text-xs text-gray-600">{item.status.replace(/-/g, ' ')}</span>
+                      </div>
+                    )}
+                    
+                    {/* Effort - Display only */}
+                    {item.effort && (
+                      <div>
+                        <span className="block text-xs font-medium text-gray-700 mb-1">Effort</span>
+                        <span className="text-xs text-gray-600">{item.effort}</span>
+                      </div>
+                    )}
+                    
+                    {/* Impact - Display only */}
+                    {item.impact && (
+                      <div>
+                        <span className="block text-xs font-medium text-gray-700 mb-1">Impact</span>
+                        <span className="text-xs text-gray-600">{item.impact}</span>
+                      </div>
+                    )}
+                    
+                    {/* Assignee - Display only */}
+                    {item.assignee && (
+                      <div>
+                        <span className="block text-xs font-medium text-gray-700 mb-1">Assignee</span>
+                        <span className="text-xs text-gray-600">{item.assignee}</span>
+                      </div>
+                    )}
+                    
+                    {/* Due Date - Display only */}
+                    {item.dueDate && (
+                      <div>
+                        <span className="block text-xs font-medium text-gray-700 mb-1">Due Date</span>
+                        <span className="text-xs text-gray-600">
+                          {new Date(item.dueDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Tags - Display only */}
+                    {item.tags && item.tags.length > 0 && (
+                      <div>
+                        <span className="block text-xs font-medium text-gray-700 mb-1">Tags</span>
+                        <div className="flex flex-wrap gap-1">
+                          {item.tags.map((tag, index) => (
+                            <span 
+                              key={index} 
+                              className="text-xs px-2 py-0.5 bg-gray-100 text-gray-800 rounded-full"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
