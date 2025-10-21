@@ -20,7 +20,8 @@ import {
   Save,
   Hash,
   Layers,
-  Building
+  Building,
+  AlertCircle as AlertCircleIcon
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Team, BusinessCapability } from '../types';
@@ -48,6 +49,11 @@ const TeamsExplorerPage: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [groupByPlatform, setGroupByPlatform] = useState(true);
+  const [validationErrors, setValidationErrors] = useState<{
+    teamName?: string;
+    platform?: string;
+  }>({});
+  const [teamNameTouched, setTeamNameTouched] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -106,14 +112,48 @@ const TeamsExplorerPage: React.FC = () => {
     setFilteredTeams(result);
   }, [teams, searchQuery, statusFilter, platformFilter]);
 
-  const handleCreateTeam = () => {
-    if (!newTeamName.trim()) {
-      alert('Team name is required');
-      return;
+  // Validate team name when it changes
+  useEffect(() => {
+    if (teamNameTouched) {
+      validateTeamName();
     }
+  }, [newTeamName]);
 
+  const validateTeamName = () => {
+    const errors = { ...validationErrors };
+    
+    if (!newTeamName.trim()) {
+      errors.teamName = 'Team name is required';
+    } else {
+      delete errors.teamName;
+    }
+    
+    setValidationErrors(errors);
+    return !errors.teamName;
+  };
+
+  const validateForm = () => {
+    const errors: {
+      teamName?: string;
+      platform?: string;
+    } = {};
+    
+    if (!newTeamName.trim()) {
+      errors.teamName = 'Team name is required';
+    }
+    
     if (!newTeamPlatform) {
-      alert('Platform selection is required');
+      errors.platform = 'Platform selection is required';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleCreateTeam = () => {
+    setTeamNameTouched(true);
+    
+    if (!validateForm()) {
       return;
     }
 
@@ -143,6 +183,8 @@ const TeamsExplorerPage: React.FC = () => {
     setNewTeamPlatform('');
     setNewTeamUnit('');
     setIsAddingTeam(false);
+    setTeamNameTouched(false);
+    setValidationErrors({});
     
     showSuccess(`Team "${newTeamName}" created successfully`);
     
@@ -302,6 +344,17 @@ const TeamsExplorerPage: React.FC = () => {
   const getUnitsForPlatform = () => {
     if (!newTeamPlatform) return [];
     return unitsByPlatform[newTeamPlatform] || [];
+  };
+
+  // Handle modal close and reset form
+  const handleCloseModal = () => {
+    setIsAddingTeam(false);
+    setNewTeamName('');
+    setNewTeamDescription('');
+    setNewTeamPlatform('');
+    setNewTeamUnit('');
+    setTeamNameTouched(false);
+    setValidationErrors({});
   };
 
   // Render team card
@@ -568,9 +621,18 @@ const TeamsExplorerPage: React.FC = () => {
                           id="team-name"
                           value={newTeamName}
                           onChange={(e) => setNewTeamName(e.target.value)}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          onBlur={() => setTeamNameTouched(true)}
+                          className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                            validationErrors.teamName ? 'border-red-300' : 'border-gray-300'
+                          }`}
                           placeholder="e.g., Digital Innovation Team"
                         />
+                        {validationErrors.teamName && (
+                          <div className="mt-1 flex items-center text-sm text-red-600">
+                            <AlertCircleIcon className="h-4 w-4 mr-1" />
+                            {validationErrors.teamName}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label htmlFor="team-platform" className="block text-sm font-medium text-gray-700">
@@ -580,7 +642,9 @@ const TeamsExplorerPage: React.FC = () => {
                           id="team-platform"
                           value={newTeamPlatform}
                           onChange={(e) => setNewTeamPlatform(e.target.value)}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                            validationErrors.platform ? 'border-red-300' : 'border-gray-300'
+                          }`}
                         >
                           <option value="">Select a platform</option>
                           {Object.entries(platformCategories).map(([category, platforms]) => (
@@ -591,6 +655,12 @@ const TeamsExplorerPage: React.FC = () => {
                             </optgroup>
                           ))}
                         </select>
+                        {validationErrors.platform && (
+                          <div className="mt-1 flex items-center text-sm text-red-600">
+                            <AlertCircleIcon className="h-4 w-4 mr-1" />
+                            {validationErrors.platform}
+                          </div>
+                        )}
                       </div>
                       {newTeamPlatform && (
                         <div>
@@ -677,7 +747,7 @@ const TeamsExplorerPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsAddingTeam(false)}
+                  onClick={handleCloseModal}
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   Cancel
