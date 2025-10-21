@@ -132,10 +132,13 @@ export interface BacklogItem {
   priority: 'high' | 'medium' | 'low';
   effort: 'small' | 'medium' | 'large';
   impact: 'high' | 'medium' | 'low';
-  assignee?: string;
-  dueDate?: string;
-  status: 'not-started' | 'in-progress' | 'blocked' | 'completed';
+  assignee?: string | null;
+  dueDate?: string | null;
+  status: 'not-started' | 'in-progress' | 'blocked' | 'completed' | 'todo';
   tags: string[];
+  estimate?: number;
+  workPackageType?: 'epic' | 'feature';
+  epicId?: string | null;
 }
 
 export interface ReleaseNote {

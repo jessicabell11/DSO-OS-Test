@@ -60,7 +60,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
         assignee: null,
         estimate: 8,
         workPackageType: 'epic',
-        epicId: null
+        epicId: null,
+        effort: 'large',
+        impact: 'high',
+        dueDate: '2025-08-15'
       },
       {
         id: 'pb-2',
@@ -72,7 +75,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
         assignee: null,
         estimate: 13,
         workPackageType: 'feature',
-        epicId: 'pb-1'
+        epicId: 'pb-1',
+        effort: 'medium',
+        impact: 'medium',
+        dueDate: '2025-07-30'
       },
       {
         id: 'pb-3',
@@ -84,7 +90,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
         assignee: null,
         estimate: 5,
         workPackageType: 'epic',
-        epicId: null
+        epicId: null,
+        effort: 'medium',
+        impact: 'high',
+        dueDate: '2025-09-10'
       },
       {
         id: 'pb-4',
@@ -96,7 +105,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
         assignee: null,
         estimate: 8,
         workPackageType: 'feature',
-        epicId: 'pb-3'
+        epicId: 'pb-3',
+        effort: 'small',
+        impact: 'medium',
+        dueDate: '2025-08-05'
       },
       {
         id: 'pb-5',
@@ -108,7 +120,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
         assignee: null,
         estimate: 5,
         workPackageType: 'feature',
-        epicId: 'pb-1'
+        epicId: 'pb-1',
+        effort: 'small',
+        impact: 'low',
+        dueDate: '2025-07-25'
       }
     ];
     
@@ -146,7 +161,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
             assignee: null,
             estimate: 13,
             workPackageType: 'epic',
-            epicId: null
+            epicId: null,
+            effort: 'large',
+            impact: 'high',
+            dueDate: '2025-09-15'
           },
           {
             id: `ai-${Date.now()}-2`,
@@ -158,7 +176,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
             assignee: null,
             estimate: 8,
             workPackageType: 'feature',
-            epicId: null
+            epicId: null,
+            effort: 'medium',
+            impact: 'medium',
+            dueDate: '2025-08-20'
           },
           {
             id: `ai-${Date.now()}-3`,
@@ -170,7 +191,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
             assignee: null,
             estimate: 5,
             workPackageType: 'feature',
-            epicId: null
+            epicId: null,
+            effort: 'small',
+            impact: 'high',
+            dueDate: '2025-07-30'
           }
         ] : 
         [
@@ -184,7 +208,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
             assignee: null,
             estimate: 8,
             workPackageType: 'epic',
-            epicId: null
+            epicId: null,
+            effort: 'large',
+            impact: 'high',
+            dueDate: '2025-09-01'
           },
           {
             id: `ai-${Date.now()}-2`,
@@ -196,7 +223,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
             assignee: null,
             estimate: 5,
             workPackageType: 'feature',
-            epicId: null
+            epicId: null,
+            effort: 'medium',
+            impact: 'medium',
+            dueDate: '2025-08-10'
           },
           {
             id: `ai-${Date.now()}-3`,
@@ -208,7 +238,10 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
             assignee: null,
             estimate: 13,
             workPackageType: 'feature',
-            epicId: null
+            epicId: null,
+            effort: 'medium',
+            impact: 'high',
+            dueDate: '2025-08-25'
           }
         ];
       
@@ -486,6 +519,36 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
       );
     }
   };
+
+  // Handle updating any backlog item attribute
+  const handleUpdateBacklogItem = (id: string, updatedItem: Partial<BacklogItem>) => {
+    // Update in product backlog
+    if (productBacklogItems.some(item => item.id === id)) {
+      setProductBacklogItems(items => 
+        items.map(item => 
+          item.id === id ? { ...item, ...updatedItem } : item
+        )
+      );
+    }
+    
+    // Update in upcoming cycle
+    if (upcomingCycleItems.some(item => item.id === id)) {
+      setUpcomingCycleItems(items => 
+        items.map(item => 
+          item.id === id ? { ...item, ...updatedItem } : item
+        )
+      );
+    }
+    
+    // Update in AI recommendations
+    if (aiRecommendations.some(item => item.id === id)) {
+      setAiRecommendations(items => 
+        items.map(item => 
+          item.id === id ? { ...item, ...updatedItem } : item
+        )
+      );
+    }
+  };
   
   // Handle showing the add item form
   const handleShowAddItemForm = (containerId: string) => {
@@ -519,7 +582,9 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
       assignee: null,
       estimate: 0, // Set a default value but we won't display it
       workPackageType: newItemWorkPackageType,
-      epicId: newItemWorkPackageType === 'feature' ? newItemEpicId : null
+      epicId: newItemWorkPackageType === 'feature' ? newItemEpicId : null,
+      effort: 'medium',
+      impact: 'medium'
     };
     
     if (showAddItemForm === 'product-backlog') {
@@ -744,6 +809,7 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                             epics={allEpics}
                             onUpdateWorkPackageType={handleUpdateWorkPackageType}
                             onUpdateEpicId={handleUpdateEpicId}
+                            onUpdateItem={handleUpdateBacklogItem}
                           />
                         ))}
                       </BacklogContainer>
@@ -792,6 +858,7 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                               epics={allEpics}
                               onUpdateWorkPackageType={handleUpdateWorkPackageType}
                               onUpdateEpicId={handleUpdateEpicId}
+                              onUpdateItem={handleUpdateBacklogItem}
                             />
                           ))}
                         </BacklogContainer>
@@ -955,6 +1022,7 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                             epics={allEpics}
                             onUpdateWorkPackageType={handleUpdateWorkPackageType}
                             onUpdateEpicId={handleUpdateEpicId}
+                            onUpdateItem={handleUpdateBacklogItem}
                           />
                         ))}
                       </BacklogContainer>
