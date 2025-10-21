@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { BacklogItem } from '../types';
-import { GripVertical, Package, ChevronDown, ChevronUp, Edit, Save, X } from 'lucide-react';
+import { GripVertical, Package, Edit, Save, X } from 'lucide-react';
 
 interface BacklogItemCardProps {
   item: BacklogItem;
@@ -205,21 +205,13 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
                   </button>
                 </div>
               ) : (
-                <>
-                  <button 
-                    onClick={handleStartEditing}
-                    className="text-blue-600 hover:text-blue-800"
-                    title="Edit item"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button 
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </button>
-                </>
+                <button 
+                  onClick={handleStartEditing}
+                  className="text-blue-600 hover:text-blue-800"
+                  title="Edit item"
+                >
+                  <Edit size={16} />
+                </button>
               )}
             </div>
           </div>
@@ -255,8 +247,8 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
             </div>
           )}
           
-          {/* Expanded details section */}
-          {(isExpanded || isEditing) && (
+          {/* Expanded details section - only shown when editing */}
+          {isEditing && (
             <div className="mt-3 pt-3 border-t border-gray-100">
               <div className="space-y-3">
                 {/* Work Package Type */}
@@ -266,7 +258,7 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
                   </label>
                   <select
                     name="workPackageType"
-                    value={isEditing ? editableItem.workPackageType : item.workPackageType || ''}
+                    value={editableItem.workPackageType}
                     onChange={handleWorkPackageTypeChange}
                     className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     disabled={isDragging}
@@ -277,14 +269,14 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
                 </div>
                 
                 {/* Epic selection dropdown (only visible for features) */}
-                {(isEditing ? editableItem.workPackageType : item.workPackageType) === 'feature' && (
+                {editableItem.workPackageType === 'feature' && (
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Parent Epic
                     </label>
                     <select
                       name="epicId"
-                      value={isEditing ? editableItem.epicId || '' : item.epicId || ''}
+                      value={editableItem.epicId || ''}
                       onChange={handleEpicChange}
                       className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                       disabled={isDragging}
@@ -300,97 +292,21 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
                 )}
 
                 {/* Priority - Always show in edit mode */}
-                {isEditing && (
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Priority
-                    </label>
-                    <select
-                      name="priority"
-                      value={editableItem.priority || ''}
-                      onChange={handleInputChange}
-                      className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Display-only fields when expanded but not editing */}
-                {isExpanded && !isEditing && (
-                  <>
-                    {/* Priority */}
-                    <div>
-                      <span className="block text-xs font-medium text-gray-700 mb-1">Priority</span>
-                      <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${
-                        priorityColors[item.priority as keyof typeof priorityColors] || 'bg-gray-100'
-                      }`}>
-                        {item.priority}
-                      </span>
-                    </div>
-                    
-                    {/* Status - Display only */}
-                    {item.status && (
-                      <div>
-                        <span className="block text-xs font-medium text-gray-700 mb-1">Status</span>
-                        <span className="text-xs text-gray-600">{item.status.replace(/-/g, ' ')}</span>
-                      </div>
-                    )}
-                    
-                    {/* Effort - Display only */}
-                    {item.effort && (
-                      <div>
-                        <span className="block text-xs font-medium text-gray-700 mb-1">Effort</span>
-                        <span className="text-xs text-gray-600">{item.effort}</span>
-                      </div>
-                    )}
-                    
-                    {/* Impact - Display only */}
-                    {item.impact && (
-                      <div>
-                        <span className="block text-xs font-medium text-gray-700 mb-1">Impact</span>
-                        <span className="text-xs text-gray-600">{item.impact}</span>
-                      </div>
-                    )}
-                    
-                    {/* Assignee - Display only */}
-                    {item.assignee && (
-                      <div>
-                        <span className="block text-xs font-medium text-gray-700 mb-1">Assignee</span>
-                        <span className="text-xs text-gray-600">{item.assignee}</span>
-                      </div>
-                    )}
-                    
-                    {/* Due Date - Display only */}
-                    {item.dueDate && (
-                      <div>
-                        <span className="block text-xs font-medium text-gray-700 mb-1">Due Date</span>
-                        <span className="text-xs text-gray-600">
-                          {new Date(item.dueDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {/* Tags - Display only */}
-                    {item.tags && item.tags.length > 0 && (
-                      <div>
-                        <span className="block text-xs font-medium text-gray-700 mb-1">Tags</span>
-                        <div className="flex flex-wrap gap-1">
-                          {item.tags.map((tag, index) => (
-                            <span 
-                              key={index} 
-                              className="text-xs px-2 py-0.5 bg-gray-100 text-gray-800 rounded-full"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Priority
+                  </label>
+                  <select
+                    name="priority"
+                    value={editableItem.priority || ''}
+                    onChange={handleInputChange}
+                    className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
               </div>
             </div>
           )}
