@@ -540,6 +540,9 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
   // Get all epics for dropdown selection
   const allEpics = getAllEpics();
 
+  // Check if design agent URL is provided and valid
+  const hasValidDesignUrl = designAgentUrl && designAgentUrl.trim() !== '';
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow">
@@ -561,14 +564,20 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
                 Your design concept from the Innovation Sprint:
               </p>
               <div className="flex items-center">
-                <a 
-                  href={designAgentUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  {designAgentUrl || 'No design concept URL provided'}
-                </a>
+                {hasValidDesignUrl ? (
+                  <a 
+                    href={designAgentUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {designAgentUrl}
+                  </a>
+                ) : (
+                  <span className="text-amber-600 text-sm">
+                    No design concept URL provided
+                  </span>
+                )}
               </div>
             </div>
           </div>
