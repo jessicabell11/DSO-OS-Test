@@ -20,7 +20,8 @@ import {
   Grid,
   Rocket,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  AlertCircle
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { teamsData } from '../data/teamsData';
@@ -33,6 +34,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const [collapsed, setCollapsed] = React.useState(false);
   const [dsoToolsExpanded, setDsoToolsExpanded] = React.useState(false);
+  const [showTeamRequiredTooltip, setShowTeamRequiredTooltip] = React.useState(false);
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId?: string }>();
   const [team, setTeam] = React.useState<any>(null);
@@ -76,6 +78,24 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
 
   const getNavPath = (path: string) => {
     return teamId ? `/teams/${teamId}${path}` : path;
+  };
+
+  const handleDsoToolClick = (e: React.MouseEvent, itemId: string) => {
+    if (!teamId) {
+      e.preventDefault();
+      setShowTeamRequiredTooltip(true);
+      
+      // Hide the tooltip after 3 seconds
+      setTimeout(() => {
+        setShowTeamRequiredTooltip(false);
+      }, 3000);
+      
+      // Navigate to teams explorer
+      navigate('/teams');
+      return;
+    }
+    
+    setActiveTab(itemId);
   };
 
   const mainNavItems = [
@@ -165,13 +185,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                 {dsoToolsItems.map((item) => (
                   <Link
                     key={item.id}
-                    to={item.path || '/'}
+                    to={teamId ? item.path : '#'}
                     className={`flex items-center px-4 py-2 text-sm font-medium rounded-md w-full ${
                       activeTab === item.id
                         ? 'bg-blue-100 text-blue-700'
                         : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                    onClick={() => setActiveTab(item.id)}
+                    } ${!teamId ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    onClick={(e) => handleDsoToolClick(e, item.id)}
                   >
                     <span className="mr-3">{item.icon}</span>
                     {item.name}
@@ -184,14 +204,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
             {collapsed && dsoToolsItems.map((item) => (
               <Link
                 key={item.id}
-                to={item.path || '/'}
+                to={teamId ? item.path : '#'}
                 className={`flex items-center px-4 py-2 text-sm font-medium rounded-md w-full justify-center ${
                   activeTab === item.id
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-gray-600 hover:bg-gray-100'
-                } mt-1`}
+                } ${!teamId ? 'opacity-70 cursor-not-allowed' : ''} mt-1`}
                 title={item.name}
-                onClick={() => setActiveTab(item.id)}
+                onClick={(e) => handleDsoToolClick(e, item.id)}
               >
                 {item.icon}
               </Link>
@@ -206,6 +226,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
       >
         {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>
+
+      {/* Team Required Tooltip */}
+      {showTeamRequiredTooltip && (
+        <div className="absolute bottom-4 left-0 right-0 mx-auto w-56 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50 text-center">
+          <div className="flex items-center justify-center mb-1">
+            <AlertCircle className="h-5 w-5 mr-1" />
+            <span className="font-medium">Team Required</span>
+          </div>
+          <p className="text-xs">Please select a team first to access DSO Journey Tools</p>
+        </div>
+      )}
     </div>
   );
 };
