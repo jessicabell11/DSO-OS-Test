@@ -130,14 +130,6 @@ const BacklogItemCard: React.FC<BacklogItemCardProps> = ({
                 {item.workPackageType === 'epic' ? 'Epic' : 'Feature'}
               </span>
             )}
-            {item.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700"
-              >
-                {tag}
-              </span>
-            ))}
             {item.status && (
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
