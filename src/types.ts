@@ -12,6 +12,7 @@ export interface Team {
   businessCapabilities: string[];
   workingAgreementId?: string;
   platform?: string;
+  unit?: string;
   metrics?: {
     cycleTime: number;
     deploymentFrequency?: number;

@@ -19,13 +19,15 @@ import {
   X,
   Save,
   Hash,
-  Layers
+  Layers,
+  Building
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Team, BusinessCapability } from '../types';
 import { teamsData } from '../data/teamsData';
 import { allBusinessCapabilities } from '../data/businessCapabilitiesData';
 import { platformsList, getPlatformColor, platformCategories, getPlatformCategory } from '../data/platformsData';
+import { unitsByPlatform, addUnitToPlatform } from '../data/unitsData';
 import Sidebar from './Sidebar';
 import AIAssistant from './AIAssistant';
 
@@ -39,6 +41,9 @@ const TeamsExplorerPage: React.FC = () => {
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamDescription, setNewTeamDescription] = useState('');
   const [newTeamPlatform, setNewTeamPlatform] = useState('');
+  const [newTeamUnit, setNewTeamUnit] = useState('');
+  const [isAddingNewUnit, setIsAddingNewUnit] = useState(false);
+  const [newUnitName, setNewUnitName] = useState('');
   const [sidebarActiveTab, setSidebarActiveTab] = useState('teams-explorer');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -46,6 +51,11 @@ const TeamsExplorerPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Reset unit when platform changes
+  useEffect(() => {
+    setNewTeamUnit('');
+  }, [newTeamPlatform]);
 
   // Check if there's a team ID in the query string on component mount
   useEffect(() => {
@@ -116,7 +126,8 @@ const TeamsExplorerPage: React.FC = () => {
       status: 'active',
       members: [],
       businessCapabilities: [],
-      platform: newTeamPlatform
+      platform: newTeamPlatform,
+      unit: newTeamUnit || undefined
     };
 
     // Update both the local state and the imported teamsData array
@@ -130,6 +141,7 @@ const TeamsExplorerPage: React.FC = () => {
     setNewTeamName('');
     setNewTeamDescription('');
     setNewTeamPlatform('');
+    setNewTeamUnit('');
     setIsAddingTeam(false);
     
     showSuccess(`Team "${newTeamName}" created successfully`);
@@ -139,6 +151,30 @@ const TeamsExplorerPage: React.FC = () => {
     setTimeout(() => {
       handleViewTeam(newTeam.id);
     }, 500);
+  };
+
+  const handleAddNewUnit = () => {
+    if (!newUnitName.trim()) {
+      alert('Unit name cannot be empty');
+      return;
+    }
+
+    if (!newTeamPlatform) {
+      alert('Please select a platform first');
+      return;
+    }
+
+    // Add the new unit to the platform
+    addUnitToPlatform(newTeamPlatform, newUnitName);
+    
+    // Select the newly added unit
+    setNewTeamUnit(newUnitName);
+    
+    // Reset the new unit form
+    setNewUnitName('');
+    setIsAddingNewUnit(false);
+    
+    showSuccess(`Added new unit "${newUnitName}" to ${newTeamPlatform}`);
   };
 
   const getCapabilityNames = (capabilityIds: string[] = []): string => {
@@ -262,6 +298,12 @@ const TeamsExplorerPage: React.FC = () => {
     return result;
   };
 
+  // Get units for the selected platform
+  const getUnitsForPlatform = () => {
+    if (!newTeamPlatform) return [];
+    return unitsByPlatform[newTeamPlatform] || [];
+  };
+
   // Render team card
   const renderTeamCard = (team: Team) => (
     <li key={team.id}>
@@ -293,14 +335,20 @@ const TeamsExplorerPage: React.FC = () => {
               <div className="mt-1 text-sm text-gray-500 max-w-2xl">
                 {team.description}
               </div>
-              {team.platform && (
-                <div className="mt-1">
+              <div className="mt-1 flex flex-wrap gap-2">
+                {team.platform && (
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPlatformColor(team.platform)}`}>
                     <Layers className="h-3 w-3 mr-1" />
                     {team.platform}
                   </span>
-                </div>
-              )}
+                )}
+                {team.unit && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                    <Building className="h-3 w-3 mr-1" />
+                    {team.unit}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center">
@@ -544,6 +592,64 @@ const TeamsExplorerPage: React.FC = () => {
                           ))}
                         </select>
                       </div>
+                      {newTeamPlatform && (
+                        <div>
+                          <div className="flex justify-between items-center">
+                            <label htmlFor="team-unit" className="block text-sm font-medium text-gray-700">
+                              Unit (Optional)
+                            </label>
+                            {!isAddingNewUnit && (
+                              <button
+                                type="button"
+                                onClick={() => setIsAddingNewUnit(true)}
+                                className="text-sm text-blue-600 hover:text-blue-800"
+                              >
+                                + Add New Unit
+                              </button>
+                            )}
+                          </div>
+                          {isAddingNewUnit ? (
+                            <div className="mt-1 flex space-x-2">
+                              <input
+                                type="text"
+                                value={newUnitName}
+                                onChange={(e) => setNewUnitName(e.target.value)}
+                                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="Enter new unit name"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleAddNewUnit}
+                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              >
+                                Add
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsAddingNewUnit(false);
+                                  setNewUnitName('');
+                                }}
+                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <select
+                              id="team-unit"
+                              value={newTeamUnit}
+                              onChange={(e) => setNewTeamUnit(e.target.value)}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            >
+                              <option value="">Select a unit (optional)</option>
+                              {getUnitsForPlatform().map(unit => (
+                                <option key={unit} value={unit}>{unit}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      )}
                       <div>
                         <label htmlFor="team-description" className="block text-sm font-medium text-gray-700">
                           Description
