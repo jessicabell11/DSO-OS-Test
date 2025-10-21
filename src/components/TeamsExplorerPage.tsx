@@ -20,7 +20,7 @@ import {
   Save,
   Hash
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Team, BusinessCapability } from '../types';
 import { teamsData } from '../data/teamsData';
 import { allBusinessCapabilities } from '../data/businessCapabilitiesData';
@@ -39,6 +39,32 @@ const TeamsExplorerPage: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Check if there's a team ID in the query string on component mount
+  useEffect(() => {
+    const teamId = searchParams.get('teamId');
+    if (teamId) {
+      // Verify the team exists
+      const teamExists = teams.some(team => team.id === teamId);
+      if (teamExists) {
+        // Navigate to the team dashboard
+        handleViewTeamDashboard(teamId);
+      } else {
+        // If team doesn't exist, remove the query parameter
+        searchParams.delete('teamId');
+        setSearchParams(searchParams);
+        
+        // Show an error message
+        setSuccessMessage(`Team with ID ${teamId} not found`);
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     let result = teams;
@@ -159,8 +185,21 @@ const TeamsExplorerPage: React.FC = () => {
 
   // Handle navigation to team dashboard
   const handleViewTeamDashboard = (teamId: string) => {
+    // Update the query string with the selected team ID
+    searchParams.set('teamId', teamId);
+    setSearchParams(searchParams);
+    
     // Use navigate to go to the team dashboard
     navigate(`/teams/${teamId}`);
+  };
+
+  // Handle team selection (just updates query string without navigation)
+  const handleSelectTeam = (teamId: string) => {
+    // Update the query string with the selected team ID
+    searchParams.set('teamId', teamId);
+    setSearchParams(searchParams);
+    
+    showSuccess(`Team selected: ${teams.find(t => t.id === teamId)?.name}`);
   };
 
   // Extract team ID number from team.id (e.g., "team-001" -> "001")
@@ -225,6 +264,27 @@ const TeamsExplorerPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Selected Team Indicator */}
+            {searchParams.get('teamId') && (
+              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-md p-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-blue-500 mr-2" />
+                  <span className="text-sm text-blue-700">
+                    Selected Team: <strong>{teams.find(t => t.id === searchParams.get('teamId'))?.name}</strong>
+                  </span>
+                </div>
+                <button 
+                  onClick={() => {
+                    searchParams.delete('teamId');
+                    setSearchParams(searchParams);
+                  }}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
             {/* Teams List */}
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
               <ul className="divide-y divide-gray-200">
@@ -261,7 +321,24 @@ const TeamsExplorerPage: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleSelectTeam(team.id)}
+                              className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md ${
+                                searchParams.get('teamId') === team.id 
+                                  ? 'text-green-700 bg-green-100 hover:bg-green-200' 
+                                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                            >
+                              {searchParams.get('teamId') === team.id ? (
+                                <>
+                                  <CheckCircle className="mr-1 h-4 w-4" />
+                                  Selected
+                                </>
+                              ) : (
+                                'Select Team'
+                              )}
+                            </button>
                             <button
                               onClick={() => handleViewTeamDashboard(team.id)}
                               className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

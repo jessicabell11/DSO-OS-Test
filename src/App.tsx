@@ -39,6 +39,7 @@ function Dashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useState(new URLSearchParams(location.search));
   
   // Create a ref to track if we're manually setting the active tab
   const manualTabChange = useRef(false);
@@ -64,6 +65,15 @@ function Dashboard() {
     'backlog-section': 'backlog',
     'related-teams-section': 'related-teams'
   };
+
+  // Check if there's a team ID in the query string on component mount
+  useEffect(() => {
+    const teamId = searchParams.get('teamId');
+    if (teamId) {
+      // Navigate to the team dashboard
+      navigate(`/teams/${teamId}`);
+    }
+  }, []);
 
   // Function to manually set active tab when clicking on a section
   const setActiveTabManually = (tabId: string) => {
@@ -102,12 +112,10 @@ function Dashboard() {
       // Only update if we found a visible section
       if (mostVisibleSection) {
         setActiveSection(mostVisibleSection);
-        console.log(`Most visible section: ${mostVisibleSection}`);
         
         // Update activeTab based on the section-to-tab mapping
         const tabId = sectionToTabMap[mostVisibleSection];
         if (tabId) {
-          console.log(`Setting activeTab to: ${tabId}`);
           setActiveTab(tabId);
         }
       }
@@ -134,11 +142,6 @@ function Dashboard() {
       });
     };
   }, []);
-
-  // Log activeTab changes
-  useEffect(() => {
-    console.log(`activeTab changed to: ${activeTab}`);
-  }, [activeTab]);
 
   useEffect(() => {
     // Check if we need to scroll to a specific section
