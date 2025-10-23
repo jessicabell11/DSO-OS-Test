@@ -12,7 +12,8 @@ import {
   CheckCircle,
   AlertCircle,
   HelpCircle,
-  RefreshCw
+  RefreshCw,
+  CornerDownRight
 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import AIAssistant from './AIAssistant';
@@ -849,13 +850,18 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                               group.children.map((outcome) => (
                                 <div key={outcome.id} className="p-4 bg-white">
                                   <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                      <h5 
-                                        className="text-base font-medium text-gray-900 cursor-pointer hover:text-blue-600"
-                                        onClick={() => toggleOutcomeExpanded(outcome.id)}
-                                      >
-                                        {outcome.title}
-                                      </h5>
+                                    <div className="flex-1 flex">
+                                      <div className="text-gray-400 mr-2 mt-0.5">
+                                        <CornerDownRight size={16} />
+                                      </div>
+                                      <div className="pl-2 border-l-2 border-gray-200">
+                                        <h5 
+                                          className="text-base font-medium text-gray-900 cursor-pointer hover:text-blue-600"
+                                          onClick={() => toggleOutcomeExpanded(outcome.id)}
+                                        >
+                                          {outcome.title}
+                                        </h5>
+                                      </div>
                                     </div>
                                     <div className="flex space-x-2 ml-4">
                                       <button
@@ -887,7 +893,7 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                                   
                                   {/* Expanded content with measurements */}
                                   {expandedOutcomeId === outcome.id && (
-                                    <div className="mt-4">
+                                    <div className="mt-4 ml-8 pl-2 border-l-2 border-gray-200">
                                       <p className="text-sm text-gray-600 mb-4">{outcome.description}</p>
                                       
                                       {/* Metrics */}
