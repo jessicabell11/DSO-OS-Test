@@ -1301,15 +1301,6 @@ const TeamSetupPage: React.FC = () => {
                       <Layers className="h-4 w-4 mr-1 text-blue-500" />
                       <h3 className="text-sm font-medium text-gray-900">Platform & Unit</h3>
                     </div>
-                    {!isPlatformEditing && (
-                      <button
-                        onClick={handleEditPlatform}
-                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                      >
-                        <Edit3 size={16} className="mr-1" />
-                        Edit
-                      </button>
-                    )}
                   </div>
 
                   {isPlatformEditing ? (
@@ -1468,6 +1459,15 @@ const TeamSetupPage: React.FC = () => {
                             <p className="mt-1 text-sm text-gray-500">No unit selected</p>
                           )}
                         </div>
+                      </div>
+                      <div className="mt-3">
+                        <button
+                          onClick={handleEditPlatform}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <Edit3 size={14} className="mr-1" />
+                          Edit Platform & Unit
+                        </button>
                       </div>
                     </div>
                   )}

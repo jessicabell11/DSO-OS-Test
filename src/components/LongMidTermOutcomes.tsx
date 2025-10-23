@@ -431,6 +431,28 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
     return midTermOutcomes.filter(outcome => outcome.parentOutcomeId === parentId);
   };
 
+  // Group mid-term outcomes by their parent long-term outcomes
+  const getMidTermOutcomesByParent = () => {
+    const groupedOutcomes: { [key: string]: { parent: Outcome, children: Outcome[] } } = {};
+    
+    // Initialize groups with all long-term outcomes (even those without children)
+    longTermOutcomes.forEach(lto => {
+      groupedOutcomes[lto.id] = {
+        parent: lto,
+        children: []
+      };
+    });
+    
+    // Add mid-term outcomes to their respective parent groups
+    midTermOutcomes.forEach(mto => {
+      if (mto.parentOutcomeId && groupedOutcomes[mto.parentOutcomeId]) {
+        groupedOutcomes[mto.parentOutcomeId].children.push(mto);
+      }
+    });
+    
+    return groupedOutcomes;
+  };
+
   // Generate AI recommended metrics based on the outcome
   const generateAIRecommendedMetrics = () => {
     if (!editingOutcome) return;
@@ -807,134 +829,155 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                       </button>
                     </div>
 
-                    {/* Mid-Term Outcomes List */}
-                    <div className="space-y-4">
-                      {midTermOutcomes.length > 0 ? (
-                        midTermOutcomes.map((outcome) => {
-                          // Find parent outcome
-                          const parentOutcome = longTermOutcomes.find(lto => lto.id === outcome.parentOutcomeId);
+                    {/* Mid-Term Outcomes List - Grouped by Long-Term Outcomes */}
+                    <div className="space-y-6">
+                      {Object.entries(getMidTermOutcomesByParent()).map(([parentId, group]) => (
+                        <div key={parentId} className="border border-gray-200 rounded-lg overflow-hidden">
+                          {/* Long-Term Outcome Header */}
+                          <div className="bg-gray-50 p-4 border-b border-gray-200">
+                            <h4 className="text-md font-medium text-gray-900">
+                              {group.parent.title}
+                            </h4>
+                            <p className="mt-1 text-xs text-gray-500">
+                              Long-term outcome (3-5 years)
+                            </p>
+                          </div>
                           
-                          return (
-                            <div key={outcome.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                              <div className="p-4 bg-white">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <h4 
-                                      className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600"
-                                      onClick={() => toggleOutcomeExpanded(outcome.id)}
-                                    >
-                                      {outcome.title}
-                                    </h4>
-                                    {parentOutcome && (
-                                      <div className="mt-1 flex items-center">
-                                        <div className="bg-blue-100 rounded-full w-1.5 h-1.5 mr-2"></div>
-                                        <span className="text-xs text-blue-700 font-medium">
-                                          Aligns with long-term outcome: 
-                                        </span>
-                                        <span className="text-xs text-blue-700 ml-1">
-                                          {parentOutcome.title.length > 60 
-                                            ? `${parentOutcome.title.substring(0, 60)}...` 
-                                            : parentOutcome.title}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex space-x-2 ml-4">
-                                    <button
-                                      onClick={() => handleEditOutcome(outcome)}
-                                      className="text-gray-400 hover:text-blue-600"
-                                      aria-label="Edit outcome"
-                                    >
-                                      <Edit size={16} />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteOutcome(outcome)}
-                                      className="text-gray-400 hover:text-red-600"
-                                      aria-label="Delete outcome"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                    <button 
-                                      onClick={() => toggleOutcomeExpanded(outcome.id)}
-                                      className="text-gray-500"
-                                    >
-                                      {expandedOutcomeId === outcome.id ? (
-                                        <ChevronUp size={16} />
-                                      ) : (
-                                        <ChevronDown size={16} />
-                                      )}
-                                    </button>
-                                  </div>
-                                </div>
-                                
-                                {/* Expanded content with measurements */}
-                                {expandedOutcomeId === outcome.id && (
-                                  <div className="mt-4">
-                                    <p className="text-sm text-gray-600 mb-4">{outcome.description}</p>
-                                    
-                                    {/* Metrics */}
-                                    <div className="mt-4">
-                                      <h5 className="text-sm font-medium text-gray-700 mb-2">Measurements</h5>
-                                      {outcome.metrics.length > 0 ? (
-                                        <div className="bg-gray-50 rounded border border-gray-200 overflow-hidden">
-                                          <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50">
-                                              <tr>
-                                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Metric</th>
-                                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Baseline</th>
-                                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Target</th>
-                                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Unit</th>
-                                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-                                              </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
-                                              {outcome.metrics.map((metric, metricIndex) => (
-                                                <tr key={metricIndex}>
-                                                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.name}</td>
-                                                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.current}</td>
-                                                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.target}</td>
-                                                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.unit}</td>
-                                                  <td className="px-3 py-2 whitespace-nowrap text-sm">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                      metric.status === 'on-track' 
-                                                        ? 'bg-green-100 text-green-800' 
-                                                        : metric.status === 'at-risk' 
-                                                          ? 'bg-yellow-100 text-yellow-800' 
-                                                          : 'bg-red-100 text-red-800'
-                                                    }`}>
-                                                      {metric.status === 'on-track' ? 'On Track' : metric.status === 'at-risk' ? 'At Risk' : 'Off Track'}
-                                                    </span>
-                                                  </td>
-                                                </tr>
-                                              ))}
-                                            </tbody>
-                                          </table>
-                                        </div>
-                                      ) : (
-                                        <p className="text-sm text-gray-500">No measurements defined</p>
-                                      )}
+                          {/* Mid-Term Outcomes for this Long-Term Outcome */}
+                          <div className="divide-y divide-gray-200">
+                            {group.children.length > 0 ? (
+                              group.children.map((outcome) => (
+                                <div key={outcome.id} className="p-4 bg-white">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                      <h5 
+                                        className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600"
+                                        onClick={() => toggleOutcomeExpanded(outcome.id)}
+                                      >
+                                        {outcome.title}
+                                      </h5>
+                                    </div>
+                                    <div className="flex space-x-2 ml-4">
+                                      <button
+                                        onClick={() => handleEditOutcome(outcome)}
+                                        className="text-gray-400 hover:text-blue-600"
+                                        aria-label="Edit outcome"
+                                      >
+                                        <Edit size={16} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteOutcome(outcome)}
+                                        className="text-gray-400 hover:text-red-600"
+                                        aria-label="Delete outcome"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                      <button 
+                                        onClick={() => toggleOutcomeExpanded(outcome.id)}
+                                        className="text-gray-500"
+                                      >
+                                        {expandedOutcomeId === outcome.id ? (
+                                          <ChevronUp size={16} />
+                                        ) : (
+                                          <ChevronDown size={16} />
+                                        )}
+                                      </button>
                                     </div>
                                   </div>
-                                )}
+                                  
+                                  {/* Expanded content with measurements */}
+                                  {expandedOutcomeId === outcome.id && (
+                                    <div className="mt-4">
+                                      <p className="text-sm text-gray-600 mb-4">{outcome.description}</p>
+                                      
+                                      {/* Metrics */}
+                                      <div className="mt-4">
+                                        <h5 className="text-sm font-medium text-gray-700 mb-2">Measurements</h5>
+                                        {outcome.metrics.length > 0 ? (
+                                          <div className="bg-gray-50 rounded border border-gray-200 overflow-hidden">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                              <thead className="bg-gray-50">
+                                                <tr>
+                                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Metric</th>
+                                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Baseline</th>
+                                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Target</th>
+                                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Unit</th>
+                                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody className="bg-white divide-y divide-gray-200">
+                                                {outcome.metrics.map((metric, metricIndex) => (
+                                                  <tr key={metricIndex}>
+                                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.name}</td>
+                                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.current}</td>
+                                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.target}</td>
+                                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{metric.unit}</td>
+                                                    <td className="px-3 py-2 whitespace-nowrap text-sm">
+                                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                        metric.status === 'on-track' 
+                                                          ? 'bg-green-100 text-green-800' 
+                                                          : metric.status === 'at-risk' 
+                                                            ? 'bg-yellow-100 text-yellow-800' 
+                                                            : 'bg-red-100 text-red-800'
+                                                      }`}>
+                                                        {metric.status === 'on-track' ? 'On Track' : metric.status === 'at-risk' ? 'At Risk' : 'Off Track'}
+                                                      </span>
+                                                    </td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        ) : (
+                                          <p className="text-sm text-gray-500">No measurements defined</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-4 text-center">
+                                <p className="text-sm text-gray-500">No mid-term outcomes linked to this long-term outcome</p>
+                                <button
+                                  onClick={() => {
+                                    const newOutcome = newOutcomeTemplate('mid-term');
+                                    newOutcome.parentOutcomeId = parentId;
+                                    setEditingOutcome(newOutcome);
+                                    setValidationFeedback({
+                                      who: { valid: false, message: 'Missing who will be impacted' },
+                                      what: { valid: false, message: 'Missing what impact is targeted' },
+                                      why: { valid: false, message: 'Missing why this matters' }
+                                    });
+                                    setShowAddOutcomeModal(true);
+                                  }}
+                                  className="mt-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
+                                >
+                                  <Plus size={12} className="mr-1" />
+                                  Add Mid-Term Outcome
+                                </button>
                               </div>
-                            </div>
-                          );
-                        })
-                      ) : (
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Empty state if no long-term outcomes exist */}
+                      {longTermOutcomes.length === 0 && (
                         <div className="text-center py-8">
                           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100">
                             <Target className="h-6 w-6 text-gray-600" />
                           </div>
-                          <h3 className="mt-2 text-sm font-medium text-gray-900">No mid-term outcomes yet</h3>
+                          <h3 className="mt-2 text-sm font-medium text-gray-900">No long-term outcomes defined</h3>
                           <p className="mt-1 text-sm text-gray-500">
-                            Add your team's mid-term outcomes (12-18 months).
+                            You need to create long-term outcomes before adding mid-term outcomes.
                           </p>
                           <button
-                            onClick={() => handleAddOutcome('mid-term')}
+                            onClick={() => setActiveSection('long-term')}
                             className="mt-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           >
                             <Plus size={16} className="mr-1" />
-                            Add Mid-Term Outcome
+                            Add Long-Term Outcome
                           </button>
                         </div>
                       )}
