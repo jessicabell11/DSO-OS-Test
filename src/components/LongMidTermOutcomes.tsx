@@ -690,7 +690,7 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                   <h4 
-                                    className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600"
+                                    className="text-base font-medium text-gray-900 cursor-pointer hover:text-blue-600"
                                     onClick={() => toggleOutcomeExpanded(outcome.id)}
                                   >
                                     {outcome.title}
@@ -851,7 +851,7 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                                   <div className="flex justify-between items-start">
                                     <div className="flex-1">
                                       <h5 
-                                        className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600"
+                                        className="text-base font-medium text-gray-900 cursor-pointer hover:text-blue-600"
                                         onClick={() => toggleOutcomeExpanded(outcome.id)}
                                       >
                                         {outcome.title}
