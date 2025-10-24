@@ -30,7 +30,8 @@ import {
   Percent,
   UserCheck,
   Layers,
-  Building
+  Building,
+  Hash
 } from 'lucide-react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { TeamWorkingAgreement, WorkingAgreementSection, TeamInfoLink, BusinessCapability, Team, TeamMember } from '../types';
@@ -108,6 +109,10 @@ const TeamSetupPage: React.FC = () => {
   const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCapabilityCategory, setActiveCapabilityCategory] = useState<'core' | 'enabling'>('core');
+  
+  // BEAT ID state
+  const [beatId, setBeatId] = useState<string>('');
+  const [isBeatIdEditing, setIsBeatIdEditing] = useState(false);
 
   // Team logo state
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
@@ -198,6 +203,13 @@ const TeamSetupPage: React.FC = () => {
         } else {
           setBacklogUrl('');
           setBacklogType('digital-product-journey');
+        }
+
+        // If the team has a BEAT ID, use it
+        if (foundTeam.beatId) {
+          setBeatId(foundTeam.beatId);
+        } else {
+          setBeatId('');
         }
 
         // Load team members if they exist
@@ -327,6 +339,34 @@ const TeamSetupPage: React.FC = () => {
     
     setIsBacklogLinkEditing(false);
     showSuccess('Backlog link updated successfully');
+  };
+
+  // Handle BEAT ID save
+  const handleBeatIdSave = () => {
+    setWorkingAgreement(prev => ({
+      ...prev,
+      beatId,
+      lastUpdated: new Date().toISOString()
+    }));
+    
+    // Also update the team data
+    if (team) {
+      const updatedTeam = {
+        ...team,
+        beatId
+      };
+      
+      // Update the team in teamsData array
+      const teamIndex = teamsData.findIndex(t => t.id === team.id);
+      if (teamIndex !== -1) {
+        teamsData[teamIndex] = updatedTeam;
+      }
+      
+      setTeam(updatedTeam);
+    }
+    
+    setIsBeatIdEditing(false);
+    showSuccess('BEAT ID updated successfully');
   };
 
   const handleAddSection = () => {
@@ -1552,6 +1592,55 @@ const TeamSetupPage: React.FC = () => {
                     </button>
                   </div>
 
+                  {/* BEAT ID Section */}
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
+                      <Hash className="h-4 w-4 mr-1 text-blue-500" />
+                      <h4 className="text-sm font-medium text-gray-700">BEAT ID</h4>
+                    </div>
+                    
+                    {isBeatIdEditing ? (
+                      <div className="flex items-center">
+                        <input
+                          type="text"
+                          value={beatId}
+                          onChange={(e) => setBeatId(e.target.value)}
+                          placeholder="Enter BEAT ID"
+                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                        <button 
+                          onClick={handleBeatIdSave}
+                          className="ml-2 p-1 text-green-600 hover:text-green-800"
+                        >
+                          <Save size={16} />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setBeatId(team?.beatId || '');
+                            setIsBeatIdEditing(false);
+                          }}
+                          className="ml-1 p-1 text-red-600 hover:text-red-800"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        {beatId ? (
+                          <span className="text-sm text-gray-900">{beatId}</span>
+                        ) : (
+                          <span className="text-sm text-gray-500">No BEAT ID specified</span>
+                        )}
+                        <button 
+                          onClick={() => setIsBeatIdEditing(true)}
+                          className="ml-2 p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {isCapabilitiesExpanded ? (
                     <div className="mt-3 space-y-4">
                       <div className="flex items-center space-x-2">
@@ -2439,9 +2528,21 @@ const TeamSetupPage: React.FC = () => {
                       )}
                     </div>
                     
-                    {/* Business Capabilities in Preview */}
+                    {/* Business Capabilities and BEAT ID in Preview */}
                     <div className="mb-6">
                       <h2 className="text-lg font-medium text-gray-900 mb-3">Business Capabilities</h2>
+                      
+                      {/* BEAT ID in Preview */}
+                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                        <div className="flex items-center">
+                          <Hash className="h-4 w-4 mr-1 text-blue-500" />
+                          <h3 className="text-sm font-medium text-gray-700">BEAT ID</h3>
+                        </div>
+                        <p className="mt-1 text-sm">
+                          {beatId ? beatId : 'No BEAT ID specified'}
+                        </p>
+                      </div>
+                      
                       {selectedCapabilities.length > 0 ? (
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

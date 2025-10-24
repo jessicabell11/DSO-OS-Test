@@ -13,6 +13,7 @@ export interface Team {
   workingAgreementId?: string;
   platform?: string;
   unit?: string;
+  beatId?: string; // Added BEAT ID field
   metrics?: {
     cycleTime: number;
     deploymentFrequency?: number;
@@ -43,6 +44,7 @@ export interface TeamWorkingAgreement {
   };
   teamInfoLinks?: TeamInfoLink[];
   businessCapabilities?: string[];
+  beatId?: string; // Added BEAT ID field
 }
 
 export interface WorkingAgreementSection {
