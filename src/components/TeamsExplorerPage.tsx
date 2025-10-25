@@ -188,11 +188,8 @@ const TeamsExplorerPage: React.FC = () => {
     
     showSuccess(`Team "${newTeamName}" created successfully`);
     
-    // Navigate to the new team's dashboard after a short delay
-    // This gives time for the success message to be seen
-    setTimeout(() => {
-      handleViewTeam(newTeam.id);
-    }, 500);
+    // Navigate to the Long & Mid-Term Outcomes screen for the new team
+    navigate(`/teams/${newTeam.id}/long-mid-term-outcomes`);
   };
 
   const handleAddNewUnit = () => {
