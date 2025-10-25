@@ -23,6 +23,192 @@ interface LongMidTermOutcomesProps {
   // Props can be added as needed
 }
 
+// Standard Platform Operating Model long-term outcomes
+const standardLongTermOutcomes: Outcome[] = [
+  {
+    id: 'lto-001',
+    title: 'IT increases Business Value by aligning platform outcomes with customer business objectives',
+    description: 'Focus on delivering measurable business value through platform initiatives that directly support customer objectives and priorities.',
+    metrics: [
+      {
+        name: 'Business value alignment score',
+        current: '60',
+        target: '90',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Customer satisfaction',
+        current: '3.5',
+        target: '4.5',
+        unit: 'out of 5',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  },
+  {
+    id: 'lto-002',
+    title: 'IT establishes a new operating model aligned with DSO principles, enabling a 30-50% faster Time to Market',
+    description: 'Transform IT operations to embrace Digital Service Organization principles, significantly reducing delivery timelines and improving responsiveness.',
+    metrics: [
+      {
+        name: 'Time to market reduction',
+        current: '10',
+        target: '40',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'DSO principles adoption',
+        current: '30',
+        target: '95',
+        unit: '%',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  },
+  {
+    id: 'lto-003',
+    title: 'Enhance platforms to be composable, reusable, integrated, and scalable; demonstrating improved efficiency, risk management, Quality & Reliability',
+    description: 'Develop platform capabilities that emphasize modularity, reusability, and scalability to improve overall system quality and operational efficiency.',
+    metrics: [
+      {
+        name: 'Component reuse rate',
+        current: '25',
+        target: '75',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'System reliability',
+        current: '99.5',
+        target: '99.95',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Integration efficiency',
+        current: '40',
+        target: '85',
+        unit: '%',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  },
+  {
+    id: 'lto-004',
+    title: 'IT optimizes structure and operations in alignment with DSO principles, leading to 10-20% Cost Efficiency',
+    description: 'Restructure IT operations and processes to achieve significant cost savings while maintaining or improving service quality.',
+    metrics: [
+      {
+        name: 'Operational cost reduction',
+        current: '5',
+        target: '15',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Resource utilization',
+        current: '70',
+        target: '90',
+        unit: '%',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  },
+  {
+    id: 'lto-005',
+    title: 'IT rationalizes and Simplifies the Technology landscape to increase efficiency by decreasing spend on complicated integrations and maintenance',
+    description: 'Streamline the technology portfolio by eliminating redundancies and simplifying integrations to reduce maintenance costs and complexity.',
+    metrics: [
+      {
+        name: 'Technology stack reduction',
+        current: '0',
+        target: '25',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Maintenance cost reduction',
+        current: '0',
+        target: '30',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Integration complexity score',
+        current: '75',
+        target: '40',
+        unit: 'score',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  },
+  {
+    id: 'lto-006',
+    title: 'Strengthen internal engineering talent, particularly in digital hubs, to drive tech solutions and foster a robust Technical Community & skill development, leading to a 5-10% increase in productivity',
+    description: 'Invest in developing engineering capabilities and communities of practice to enhance technical excellence and team productivity.',
+    metrics: [
+      {
+        name: 'Engineering productivity',
+        current: '0',
+        target: '10',
+        unit: '% increase',
+        status: 'on-track'
+      },
+      {
+        name: 'Technical community engagement',
+        current: '30',
+        target: '80',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Skill development completion',
+        current: '45',
+        target: '90',
+        unit: '%',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  },
+  {
+    id: 'lto-007',
+    title: 'IT ensures robust Security & Compliance across the organization to protect data, meet regulatory requirements, and mitigate risks',
+    description: 'Implement comprehensive security measures and compliance frameworks to safeguard organizational assets and maintain regulatory adherence.',
+    metrics: [
+      {
+        name: 'Security incident reduction',
+        current: '0',
+        target: '50',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Compliance score',
+        current: '85',
+        target: '100',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Risk mitigation effectiveness',
+        current: '70',
+        target: '95',
+        unit: '%',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  }
+];
+
 const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId?: string }>();
@@ -45,162 +231,190 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
   const [metricToDelete, setMetricToDelete] = useState<{ index: number; name: string } | null>(null);
   const [showConfirmDeleteMetric, setShowConfirmDeleteMetric] = useState(false);
   const [isGeneratingMetrics, setIsGeneratingMetrics] = useState(false);
+  const [isNewTeam, setIsNewTeam] = useState(false);
 
   // Sample data for long-term outcomes (3-5 years)
-  const [longTermOutcomes, setLongTermOutcomes] = useState<Outcome[]>([
-    {
-      id: 'lto-001',
-      title: 'Engineering teams will have a unified platform for measuring and improving delivery performance, enabling data-driven decisions across the organization',
-      description: 'Create a centralized platform that provides engineering teams with metrics and insights to improve their delivery performance and make data-driven decisions.',
-      metrics: [
-        {
-          name: 'Teams using platform',
-          current: '0',
-          target: '100',
-          unit: '%',
-          status: 'on-track'
-        },
-        {
-          name: 'Data-driven decisions',
-          current: '25',
-          target: '90',
-          unit: '%',
-          status: 'on-track'
-        },
-        {
-          name: 'Delivery performance improvement',
-          current: '0',
-          target: '30',
-          unit: '%',
-          status: 'on-track'
-        }
-      ],
-      timeframe: 'long-term'
-    },
-    {
-      id: 'lto-002',
-      title: 'Product teams will have comprehensive user insights integrated into their workflow, resulting in features that better address customer needs',
-      description: 'Integrate user research and feedback directly into the product development process to ensure features are aligned with actual customer needs and pain points.',
-      metrics: [
-        {
-          name: 'Feature success rate',
-          current: '65',
-          target: '90',
-          unit: '%',
-          status: 'on-track'
-        },
-        {
-          name: 'User satisfaction',
-          current: '3.8',
-          target: '4.5',
-          unit: 'out of 5',
-          status: 'on-track'
-        },
-        {
-          name: 'Research-backed decisions',
-          current: '40',
-          target: '95',
-          unit: '%',
-          status: 'on-track'
-        }
-      ],
-      timeframe: 'long-term'
-    }
-  ]);
+  const [longTermOutcomes, setLongTermOutcomes] = useState<Outcome[]>([]);
 
   // Sample data for mid-term outcomes (12-18 months)
-  const [midTermOutcomes, setMidTermOutcomes] = useState<Outcome[]>([
-    {
-      id: 'mto-001',
-      title: 'Engineering Insights Platform',
-      description: 'Build a platform that collects, analyzes, and visualizes engineering metrics to provide actionable insights for teams.',
-      metrics: [
+  const [midTermOutcomes, setMidTermOutcomes] = useState<Outcome[]>([]);
+
+  // Check if this is a new team by looking at URL parameters or localStorage
+  useEffect(() => {
+    // Check if we're coming from team creation
+    const referrer = document.referrer;
+    const isFromTeamsExplorer = referrer.includes('teams-explorer');
+    
+    // Check if we've already initialized this team's outcomes
+    const initializedTeams = JSON.parse(localStorage.getItem('initializedTeams') || '[]');
+    const isTeamInitialized = teamId ? initializedTeams.includes(teamId) : false;
+    
+    // If coming from teams explorer and not initialized, consider it a new team
+    if (teamId && !isTeamInitialized) {
+      setIsNewTeam(true);
+      
+      // Pre-populate with standard long-term outcomes
+      setLongTermOutcomes([...standardLongTermOutcomes]);
+      
+      // Mark this team as initialized
+      localStorage.setItem('initializedTeams', JSON.stringify([...initializedTeams, teamId]));
+    } else {
+      // Load existing data
+      setLongTermOutcomes([
         {
-          name: 'Data sources integrated',
-          current: '2',
-          target: '8',
-          unit: 'sources',
-          status: 'on-track'
+          id: 'lto-001',
+          title: 'Engineering teams will have a unified platform for measuring and improving delivery performance, enabling data-driven decisions across the organization',
+          description: 'Create a centralized platform that provides engineering teams with metrics and insights to improve their delivery performance and make data-driven decisions.',
+          metrics: [
+            {
+              name: 'Teams using platform',
+              current: '0',
+              target: '100',
+              unit: '%',
+              status: 'on-track'
+            },
+            {
+              name: 'Data-driven decisions',
+              current: '25',
+              target: '90',
+              unit: '%',
+              status: 'on-track'
+            },
+            {
+              name: 'Delivery performance improvement',
+              current: '0',
+              target: '30',
+              unit: '%',
+              status: 'on-track'
+            }
+          ],
+          timeframe: 'long-term'
         },
         {
-          name: 'Metrics dashboard adoption',
-          current: '15',
-          target: '80',
-          unit: '%',
-          status: 'on-track'
-        },
-        {
-          name: 'Automated insights generated',
-          current: '5',
-          target: '50',
-          unit: 'per sprint',
-          status: 'on-track'
+          id: 'lto-002',
+          title: 'Product teams will have comprehensive user insights integrated into their workflow, resulting in features that better address customer needs',
+          description: 'Integrate user research and feedback directly into the product development process to ensure features are aligned with actual customer needs and pain points.',
+          metrics: [
+            {
+              name: 'Feature success rate',
+              current: '65',
+              target: '90',
+              unit: '%',
+              status: 'on-track'
+            },
+            {
+              name: 'User satisfaction',
+              current: '3.8',
+              target: '4.5',
+              unit: 'out of 5',
+              status: 'on-track'
+            },
+            {
+              name: 'Research-backed decisions',
+              current: '40',
+              target: '95',
+              unit: '%',
+              status: 'on-track'
+            }
+          ],
+          timeframe: 'long-term'
         }
-      ],
-      timeframe: 'mid-term',
-      parentOutcomeId: 'lto-001'
-    },
-    {
-      id: 'mto-002',
-      title: 'Cross-Team Collaboration Metrics',
-      description: 'Develop metrics and tools to measure and improve collaboration between teams.',
-      metrics: [
+      ]);
+      
+      setMidTermOutcomes([
         {
-          name: 'Cross-team dependencies',
-          current: '45',
-          target: '20',
-          unit: 'per quarter',
-          status: 'on-track'
+          id: 'mto-001',
+          title: 'Engineering Insights Platform',
+          description: 'Build a platform that collects, analyzes, and visualizes engineering metrics to provide actionable insights for teams.',
+          metrics: [
+            {
+              name: 'Data sources integrated',
+              current: '2',
+              target: '8',
+              unit: 'sources',
+              status: 'on-track'
+            },
+            {
+              name: 'Metrics dashboard adoption',
+              current: '15',
+              target: '80',
+              unit: '%',
+              status: 'on-track'
+            },
+            {
+              name: 'Automated insights generated',
+              current: '5',
+              target: '50',
+              unit: 'per sprint',
+              status: 'on-track'
+            }
+          ],
+          timeframe: 'mid-term',
+          parentOutcomeId: 'lto-001'
         },
         {
-          name: 'Shared planning sessions',
-          current: '4',
-          target: '12',
-          unit: 'per quarter',
-          status: 'on-track'
+          id: 'mto-002',
+          title: 'Cross-Team Collaboration Metrics',
+          description: 'Develop metrics and tools to measure and improve collaboration between teams.',
+          metrics: [
+            {
+              name: 'Cross-team dependencies',
+              current: '45',
+              target: '20',
+              unit: 'per quarter',
+              status: 'on-track'
+            },
+            {
+              name: 'Shared planning sessions',
+              current: '4',
+              target: '12',
+              unit: 'per quarter',
+              status: 'on-track'
+            },
+            {
+              name: 'Collaboration satisfaction',
+              current: '3.2',
+              target: '4.5',
+              unit: 'out of 5',
+              status: 'on-track'
+            }
+          ],
+          timeframe: 'mid-term',
+          parentOutcomeId: 'lto-001'
         },
         {
-          name: 'Collaboration satisfaction',
-          current: '3.2',
-          target: '4.5',
-          unit: 'out of 5',
-          status: 'on-track'
+          id: 'mto-003',
+          title: 'User Research Integration',
+          description: 'Create a system to integrate user research findings directly into the product development process.',
+          metrics: [
+            {
+              name: 'Research sessions',
+              current: '8',
+              target: '24',
+              unit: 'per quarter',
+              status: 'on-track'
+            },
+            {
+              name: 'Research insights used',
+              current: '30',
+              target: '90',
+              unit: '%',
+              status: 'on-track'
+            },
+            {
+              name: 'Time from insight to implementation',
+              current: '45',
+              target: '15',
+              unit: 'days',
+              status: 'on-track'
+            }
+          ],
+          timeframe: 'mid-term',
+          parentOutcomeId: 'lto-002'
         }
-      ],
-      timeframe: 'mid-term',
-      parentOutcomeId: 'lto-001'
-    },
-    {
-      id: 'mto-003',
-      title: 'User Research Integration',
-      description: 'Create a system to integrate user research findings directly into the product development process.',
-      metrics: [
-        {
-          name: 'Research sessions',
-          current: '8',
-          target: '24',
-          unit: 'per quarter',
-          status: 'on-track'
-        },
-        {
-          name: 'Research insights used',
-          current: '30',
-          target: '90',
-          unit: '%',
-          status: 'on-track'
-        },
-        {
-          name: 'Time from insight to implementation',
-          current: '45',
-          target: '15',
-          unit: 'days',
-          status: 'on-track'
-        }
-      ],
-      timeframe: 'mid-term',
-      parentOutcomeId: 'lto-002'
+      ]);
     }
-  ]);
+  }, [teamId]);
 
   // New outcome template
   const newOutcomeTemplate = (timeframe: 'long-term' | 'mid-term'): Outcome => ({
