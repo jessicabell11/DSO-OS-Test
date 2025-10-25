@@ -1596,8 +1596,12 @@ const TeamSetupPage: React.FC = () => {
                   <div className="mb-4">
                     <div className="flex items-center mb-2">
                       <Hash className="h-4 w-4 mr-1 text-blue-500" />
-                      <h4 className="text-sm font-medium text-gray-700">BEAT ID</h4>
+                      <h4 className="text-sm font-medium text-gray-700">BEAT (Bayer Enterprise Architecture Tool) ID</h4>
                     </div>
+                    
+                    <p className="text-xs text-gray-500 mb-2">
+                      BEAT ID is a unique identifier for your application, which is used for application and technology portfolio management. For more information access BEAT - go/cloud
+                    </p>
                     
                     {isBeatIdEditing ? (
                       <div className="flex items-center">
@@ -2536,9 +2540,12 @@ const TeamSetupPage: React.FC = () => {
                       <div className="bg-gray-50 p-4 rounded-lg mb-4">
                         <div className="flex items-center">
                           <Hash className="h-4 w-4 mr-1 text-blue-500" />
-                          <h3 className="text-sm font-medium text-gray-700">BEAT ID</h3>
+                          <h3 className="text-sm font-medium text-gray-700">BEAT (Bayer Enterprise Architecture Tool) ID</h3>
                         </div>
-                        <p className="mt-1 text-sm">
+                        <p className="mt-1 text-xs text-gray-500">
+                          BEAT ID is a unique identifier for your application, which is used for application and technology portfolio management.
+                        </p>
+                        <p className="mt-2 text-sm">
                           {beatId ? beatId : 'No BEAT ID specified'}
                         </p>
                       </div>
