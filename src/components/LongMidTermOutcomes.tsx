@@ -209,6 +209,162 @@ const standardLongTermOutcomes: Outcome[] = [
   }
 ];
 
+// Sample data for existing teams
+const sampleLongTermOutcomes: Outcome[] = [
+  {
+    id: 'lto-001',
+    title: 'Engineering teams will have a unified platform for measuring and improving delivery performance, enabling data-driven decisions across the organization',
+    description: 'Create a centralized platform that provides engineering teams with metrics and insights to improve their delivery performance and make data-driven decisions.',
+    metrics: [
+      {
+        name: 'Teams using platform',
+        current: '0',
+        target: '100',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Data-driven decisions',
+        current: '25',
+        target: '90',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Delivery performance improvement',
+        current: '0',
+        target: '30',
+        unit: '%',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  },
+  {
+    id: 'lto-002',
+    title: 'Product teams will have comprehensive user insights integrated into their workflow, resulting in features that better address customer needs',
+    description: 'Integrate user research and feedback directly into the product development process to ensure features are aligned with actual customer needs and pain points.',
+    metrics: [
+      {
+        name: 'Feature success rate',
+        current: '65',
+        target: '90',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'User satisfaction',
+        current: '3.8',
+        target: '4.5',
+        unit: 'out of 5',
+        status: 'on-track'
+      },
+      {
+        name: 'Research-backed decisions',
+        current: '40',
+        target: '95',
+        unit: '%',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'long-term'
+  }
+];
+
+// Sample data for mid-term outcomes
+const sampleMidTermOutcomes: Outcome[] = [
+  {
+    id: 'mto-001',
+    title: 'Engineering Insights Platform',
+    description: 'Build a platform that collects, analyzes, and visualizes engineering metrics to provide actionable insights for teams.',
+    metrics: [
+      {
+        name: 'Data sources integrated',
+        current: '2',
+        target: '8',
+        unit: 'sources',
+        status: 'on-track'
+      },
+      {
+        name: 'Metrics dashboard adoption',
+        current: '15',
+        target: '80',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Automated insights generated',
+        current: '5',
+        target: '50',
+        unit: 'per sprint',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'mid-term',
+    parentOutcomeId: 'lto-001'
+  },
+  {
+    id: 'mto-002',
+    title: 'Cross-Team Collaboration Metrics',
+    description: 'Develop metrics and tools to measure and improve collaboration between teams.',
+    metrics: [
+      {
+        name: 'Cross-team dependencies',
+        current: '45',
+        target: '20',
+        unit: 'per quarter',
+        status: 'on-track'
+      },
+      {
+        name: 'Shared planning sessions',
+        current: '4',
+        target: '12',
+        unit: 'per quarter',
+        status: 'on-track'
+      },
+      {
+        name: 'Collaboration satisfaction',
+        current: '3.2',
+        target: '4.5',
+        unit: 'out of 5',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'mid-term',
+    parentOutcomeId: 'lto-001'
+  },
+  {
+    id: 'mto-003',
+    title: 'User Research Integration',
+    description: 'Create a system to integrate user research findings directly into the product development process.',
+    metrics: [
+      {
+        name: 'Research sessions',
+        current: '8',
+        target: '24',
+        unit: 'per quarter',
+        status: 'on-track'
+      },
+      {
+        name: 'Research insights used',
+        current: '30',
+        target: '90',
+        unit: '%',
+        status: 'on-track'
+      },
+      {
+        name: 'Time from insight to implementation',
+        current: '45',
+        target: '15',
+        unit: 'days',
+        status: 'on-track'
+      }
+    ],
+    timeframe: 'mid-term',
+    parentOutcomeId: 'lto-002'
+  }
+];
+
 const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId?: string }>();
@@ -232,189 +388,101 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
   const [showConfirmDeleteMetric, setShowConfirmDeleteMetric] = useState(false);
   const [isGeneratingMetrics, setIsGeneratingMetrics] = useState(false);
   const [isNewTeam, setIsNewTeam] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Sample data for long-term outcomes (3-5 years)
+  // State for outcomes
   const [longTermOutcomes, setLongTermOutcomes] = useState<Outcome[]>([]);
-
-  // Sample data for mid-term outcomes (12-18 months)
   const [midTermOutcomes, setMidTermOutcomes] = useState<Outcome[]>([]);
 
-  // Check if this is a new team by looking at URL parameters or localStorage
+  // Check if this is a new team and load appropriate outcomes
   useEffect(() => {
-    // Check if we're coming from team creation
-    const referrer = document.referrer;
-    const isFromTeamsExplorer = referrer.includes('teams-explorer');
+    if (!teamId) return;
+
+    setIsLoading(true);
     
-    // Check if we've already initialized this team's outcomes
-    const initializedTeams = JSON.parse(localStorage.getItem('initializedTeams') || '[]');
-    const isTeamInitialized = teamId ? initializedTeams.includes(teamId) : false;
+    // Function to load outcomes
+    const loadOutcomes = () => {
+      console.log("Loading outcomes for team:", teamId);
+      
+      // Check if team has been initialized in our outcomes tracking
+      const outcomeInitializedTeamsStr = localStorage.getItem('outcomeInitializedTeams');
+      const outcomeInitializedTeams = outcomeInitializedTeamsStr ? JSON.parse(outcomeInitializedTeamsStr) : [];
+      const isTeamOutcomeInitialized = outcomeInitializedTeams.includes(teamId);
+      
+      console.log("Is team outcome initialized:", isTeamOutcomeInitialized);
+      
+      // Try to load team-specific outcomes from localStorage
+      const savedLongTermOutcomes = localStorage.getItem(`longTermOutcomes_${teamId}`);
+      const savedMidTermOutcomes = localStorage.getItem(`midTermOutcomes_${teamId}`);
+      
+      if (savedLongTermOutcomes && JSON.parse(savedLongTermOutcomes).length > 0) {
+        // Team has saved long-term outcomes, load them
+        console.log("Loading saved long-term outcomes for team", teamId);
+        setLongTermOutcomes(JSON.parse(savedLongTermOutcomes));
+        
+        if (savedMidTermOutcomes) {
+          setMidTermOutcomes(JSON.parse(savedMidTermOutcomes));
+        } else {
+          setMidTermOutcomes([]);
+        }
+        
+        setIsNewTeam(false);
+      } else if (!isTeamOutcomeInitialized) {
+        // This is a new team or first visit to outcomes page, load standard outcomes
+        console.log("New team detected - loading standard outcomes");
+        
+        // Use deep copy to avoid reference issues
+        const standardOutcomesCopy = JSON.parse(JSON.stringify(standardLongTermOutcomes));
+        
+        setLongTermOutcomes(standardOutcomesCopy);
+        setMidTermOutcomes([]);
+        setIsNewTeam(true);
+        
+        // Mark this team as initialized for outcomes
+        localStorage.setItem('outcomeInitializedTeams', JSON.stringify([...outcomeInitializedTeams, teamId]));
+        
+        // Save the standard outcomes for this team
+        localStorage.setItem(`longTermOutcomes_${teamId}`, JSON.stringify(standardOutcomesCopy));
+        localStorage.setItem(`midTermOutcomes_${teamId}`, JSON.stringify([]));
+      } else {
+        // Team is initialized but doesn't have saved outcomes, load sample data
+        console.log("Team initialized but no saved outcomes - loading sample data");
+        
+        // Use deep copy to avoid reference issues
+        const sampleLongTermCopy = JSON.parse(JSON.stringify(sampleLongTermOutcomes));
+        const sampleMidTermCopy = JSON.parse(JSON.stringify(sampleMidTermOutcomes));
+        
+        setLongTermOutcomes(sampleLongTermCopy);
+        setMidTermOutcomes(sampleMidTermCopy);
+        setIsNewTeam(false);
+        
+        // Save the sample data for this team
+        localStorage.setItem(`longTermOutcomes_${teamId}`, JSON.stringify(sampleLongTermCopy));
+        localStorage.setItem(`midTermOutcomes_${teamId}`, JSON.stringify(sampleMidTermCopy));
+      }
+      
+      setIsLoading(false);
+    };
     
-    // If coming from teams explorer and not initialized, consider it a new team
-    if (teamId && !isTeamInitialized) {
-      setIsNewTeam(true);
-      
-      // Pre-populate with standard long-term outcomes
-      setLongTermOutcomes([...standardLongTermOutcomes]);
-      
-      // Mark this team as initialized
-      localStorage.setItem('initializedTeams', JSON.stringify([...initializedTeams, teamId]));
-    } else {
-      // Load existing data
-      setLongTermOutcomes([
-        {
-          id: 'lto-001',
-          title: 'Engineering teams will have a unified platform for measuring and improving delivery performance, enabling data-driven decisions across the organization',
-          description: 'Create a centralized platform that provides engineering teams with metrics and insights to improve their delivery performance and make data-driven decisions.',
-          metrics: [
-            {
-              name: 'Teams using platform',
-              current: '0',
-              target: '100',
-              unit: '%',
-              status: 'on-track'
-            },
-            {
-              name: 'Data-driven decisions',
-              current: '25',
-              target: '90',
-              unit: '%',
-              status: 'on-track'
-            },
-            {
-              name: 'Delivery performance improvement',
-              current: '0',
-              target: '30',
-              unit: '%',
-              status: 'on-track'
-            }
-          ],
-          timeframe: 'long-term'
-        },
-        {
-          id: 'lto-002',
-          title: 'Product teams will have comprehensive user insights integrated into their workflow, resulting in features that better address customer needs',
-          description: 'Integrate user research and feedback directly into the product development process to ensure features are aligned with actual customer needs and pain points.',
-          metrics: [
-            {
-              name: 'Feature success rate',
-              current: '65',
-              target: '90',
-              unit: '%',
-              status: 'on-track'
-            },
-            {
-              name: 'User satisfaction',
-              current: '3.8',
-              target: '4.5',
-              unit: 'out of 5',
-              status: 'on-track'
-            },
-            {
-              name: 'Research-backed decisions',
-              current: '40',
-              target: '95',
-              unit: '%',
-              status: 'on-track'
-            }
-          ],
-          timeframe: 'long-term'
-        }
-      ]);
-      
-      setMidTermOutcomes([
-        {
-          id: 'mto-001',
-          title: 'Engineering Insights Platform',
-          description: 'Build a platform that collects, analyzes, and visualizes engineering metrics to provide actionable insights for teams.',
-          metrics: [
-            {
-              name: 'Data sources integrated',
-              current: '2',
-              target: '8',
-              unit: 'sources',
-              status: 'on-track'
-            },
-            {
-              name: 'Metrics dashboard adoption',
-              current: '15',
-              target: '80',
-              unit: '%',
-              status: 'on-track'
-            },
-            {
-              name: 'Automated insights generated',
-              current: '5',
-              target: '50',
-              unit: 'per sprint',
-              status: 'on-track'
-            }
-          ],
-          timeframe: 'mid-term',
-          parentOutcomeId: 'lto-001'
-        },
-        {
-          id: 'mto-002',
-          title: 'Cross-Team Collaboration Metrics',
-          description: 'Develop metrics and tools to measure and improve collaboration between teams.',
-          metrics: [
-            {
-              name: 'Cross-team dependencies',
-              current: '45',
-              target: '20',
-              unit: 'per quarter',
-              status: 'on-track'
-            },
-            {
-              name: 'Shared planning sessions',
-              current: '4',
-              target: '12',
-              unit: 'per quarter',
-              status: 'on-track'
-            },
-            {
-              name: 'Collaboration satisfaction',
-              current: '3.2',
-              target: '4.5',
-              unit: 'out of 5',
-              status: 'on-track'
-            }
-          ],
-          timeframe: 'mid-term',
-          parentOutcomeId: 'lto-001'
-        },
-        {
-          id: 'mto-003',
-          title: 'User Research Integration',
-          description: 'Create a system to integrate user research findings directly into the product development process.',
-          metrics: [
-            {
-              name: 'Research sessions',
-              current: '8',
-              target: '24',
-              unit: 'per quarter',
-              status: 'on-track'
-            },
-            {
-              name: 'Research insights used',
-              current: '30',
-              target: '90',
-              unit: '%',
-              status: 'on-track'
-            },
-            {
-              name: 'Time from insight to implementation',
-              current: '45',
-              target: '15',
-              unit: 'days',
-              status: 'on-track'
-            }
-          ],
-          timeframe: 'mid-term',
-          parentOutcomeId: 'lto-002'
-        }
-      ]);
-    }
+    // Small delay to ensure DOM is ready and localStorage is accessible
+    setTimeout(loadOutcomes, 100);
+    
   }, [teamId]);
+
+  // Save outcomes to localStorage whenever they change
+  useEffect(() => {
+    if (teamId && longTermOutcomes.length > 0 && !isLoading) {
+      console.log("Saving long-term outcomes to localStorage for team", teamId);
+      localStorage.setItem(`longTermOutcomes_${teamId}`, JSON.stringify(longTermOutcomes));
+    }
+  }, [longTermOutcomes, teamId, isLoading]);
+
+  useEffect(() => {
+    if (teamId && !isLoading) {
+      console.log("Saving mid-term outcomes to localStorage for team", teamId);
+      localStorage.setItem(`midTermOutcomes_${teamId}`, JSON.stringify(midTermOutcomes));
+    }
+  }, [midTermOutcomes, teamId, isLoading]);
 
   // New outcome template
   const newOutcomeTemplate = (timeframe: 'long-term' | 'mid-term'): Outcome => ({
@@ -596,7 +664,8 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                   outcomeText.toLowerCase().includes("users") || 
                   outcomeText.toLowerCase().includes("customers") ||
                   outcomeText.toLowerCase().includes("engineers") ||
-                  outcomeText.toLowerCase().includes("managers");
+                  outcomeText.toLowerCase().includes("managers") ||
+                  outcomeText.toLowerCase().includes("it");
     
     const hasWhat = outcomeText.toLowerCase().includes("will") && 
                    (outcomeText.toLowerCase().includes("have") || 
@@ -604,12 +673,18 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                     outcomeText.toLowerCase().includes("utilize") ||
                     outcomeText.toLowerCase().includes("implement") ||
                     outcomeText.toLowerCase().includes("adopt") ||
-                    outcomeText.toLowerCase().includes("establish"));
+                    outcomeText.toLowerCase().includes("establish") ||
+                    outcomeText.toLowerCase().includes("increases") ||
+                    outcomeText.toLowerCase().includes("optimizes") ||
+                    outcomeText.toLowerCase().includes("ensures"));
     
     const hasWhy = outcomeText.toLowerCase().includes("enabling") || 
                   outcomeText.toLowerCase().includes("resulting") || 
                   outcomeText.toLowerCase().includes("improving") ||
-                  outcomeText.toLowerCase().includes("reducing");
+                  outcomeText.toLowerCase().includes("reducing") ||
+                  outcomeText.toLowerCase().includes("leading to") ||
+                  outcomeText.toLowerCase().includes("to increase") ||
+                  outcomeText.toLowerCase().includes("to protect");
     
     return {
       who: { 
@@ -814,6 +889,64 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
     }, 1500);
   };
 
+  // Debug function to reset localStorage for testing
+  const resetLocalStorage = () => {
+    if (teamId) {
+      localStorage.removeItem(`longTermOutcomes_${teamId}`);
+      localStorage.removeItem(`midTermOutcomes_${teamId}`);
+      
+      // Remove from initialized teams list
+      const outcomeInitializedTeamsStr = localStorage.getItem('outcomeInitializedTeams');
+      const outcomeInitializedTeams = outcomeInitializedTeamsStr ? JSON.parse(outcomeInitializedTeamsStr) : [];
+      const updatedTeams = outcomeInitializedTeams.filter((id: string) => id !== teamId);
+      localStorage.setItem('outcomeInitializedTeams', JSON.stringify(updatedTeams));
+      
+      console.log("Reset localStorage for team", teamId);
+      window.location.reload();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white shadow">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex items-center">
+                <button 
+                  onClick={() => navigate(teamId ? `/teams/${teamId}` : '/')} 
+                  className="text-blue-600 hover:text-blue-800 mr-4"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+                    <Target className="h-6 w-6 mr-2 text-blue-500" />
+                    Long & Mid-Term Outcomes
+                  </h1>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Define and manage your team's long-term (3-5 years) and mid-term (12-18 months) outcomes
+                  </p>
+                </div>
+              </div>
+            </div>
+          </header>
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="bg-white rounded-lg shadow p-8 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading outcomes...</p>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -887,13 +1020,21 @@ const LongMidTermOutcomes: React.FC<LongMidTermOutcomesProps> = () => {
                   <div className="mt-4">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-medium text-gray-900">Long-Term Outcomes</h3>
-                      <button
-                        onClick={() => handleAddOutcome('long-term')}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        <Plus size={16} className="mr-1" />
-                        Add Long-Term Outcome
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleAddOutcome('long-term')}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <Plus size={16} className="mr-1" />
+                          Add Long-Term Outcome
+                        </button>
+                        <button
+                          onClick={resetLocalStorage}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                        >
+                          Reset
+                        </button>
+                      </div>
                     </div>
 
                     {/* Long-Term Outcomes List */}
