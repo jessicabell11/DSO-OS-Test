@@ -1592,59 +1592,6 @@ const TeamSetupPage: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* BEAT ID Section */}
-                  <div className="mb-4">
-                    <div className="flex items-center mb-2">
-                      <Hash className="h-4 w-4 mr-1 text-blue-500" />
-                      <h4 className="text-sm font-medium text-gray-700">BEAT (Bayer Enterprise Architecture Tool) ID</h4>
-                    </div>
-                    
-                    <p className="text-xs text-gray-500 mb-2">
-                      BEAT ID is a unique identifier for your application, which is used for application and technology portfolio management. For more information access BEAT - go/cloud
-                    </p>
-                    
-                    {isBeatIdEditing ? (
-                      <div className="flex items-center">
-                        <input
-                          type="text"
-                          value={beatId}
-                          onChange={(e) => setBeatId(e.target.value)}
-                          placeholder="Enter BEAT ID"
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                        <button 
-                          onClick={handleBeatIdSave}
-                          className="ml-2 p-1 text-green-600 hover:text-green-800"
-                        >
-                          <Save size={16} />
-                        </button>
-                        <button 
-                          onClick={() => {
-                            setBeatId(team?.beatId || '');
-                            setIsBeatIdEditing(false);
-                          }}
-                          className="ml-1 p-1 text-red-600 hover:text-red-800"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        {beatId ? (
-                          <span className="text-sm text-gray-900">{beatId}</span>
-                        ) : (
-                          <span className="text-sm text-gray-500">No BEAT ID specified</span>
-                        )}
-                        <button 
-                          onClick={() => setIsBeatIdEditing(true)}
-                          className="ml-2 p-1 text-gray-400 hover:text-gray-600"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
                   {isCapabilitiesExpanded ? (
                     <div className="mt-3 space-y-4">
                       <div className="flex items-center space-x-2">
@@ -1760,6 +1707,59 @@ const TeamSetupPage: React.FC = () => {
                           <p className="text-xs text-gray-400 mt-1">Click "Expand" to select the capabilities your team is responsible for</p>
                         </div>
                       )}
+                    </div>
+                  )}
+                </div>
+
+                {/* BEAT ID Section - Moved here after Business Capabilities */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center mb-2">
+                    <Hash className="h-4 w-4 mr-1 text-blue-500" />
+                    <h3 className="text-sm font-medium text-gray-900">BEAT (Bayer Enterprise Architecture Tool) ID</h3>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mb-2">
+                    BEAT ID is a unique identifier for your application, which is used for application and technology portfolio management. For more information access BEAT - go/cloud
+                  </p>
+                  
+                  {isBeatIdEditing ? (
+                    <div className="flex items-center">
+                      <input
+                        type="text"
+                        value={beatId}
+                        onChange={(e) => setBeatId(e.target.value)}
+                        placeholder="Enter BEAT ID"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                      <button 
+                        onClick={handleBeatIdSave}
+                        className="ml-2 p-1 text-green-600 hover:text-green-800"
+                      >
+                        <Save size={16} />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setBeatId(team?.beatId || '');
+                          setIsBeatIdEditing(false);
+                        }}
+                        className="ml-1 p-1 text-red-600 hover:text-red-800"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      {beatId ? (
+                        <span className="text-sm text-gray-900">{beatId}</span>
+                      ) : (
+                        <span className="text-sm text-gray-500">No BEAT ID specified</span>
+                      )}
+                      <button 
+                        onClick={() => setIsBeatIdEditing(true)}
+                        className="ml-2 p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        <Edit3 size={14} />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -2536,20 +2536,6 @@ const TeamSetupPage: React.FC = () => {
                     <div className="mb-6">
                       <h2 className="text-lg font-medium text-gray-900 mb-3">Business Capabilities</h2>
                       
-                      {/* BEAT ID in Preview */}
-                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                        <div className="flex items-center">
-                          <Hash className="h-4 w-4 mr-1 text-blue-500" />
-                          <h3 className="text-sm font-medium text-gray-700">BEAT (Bayer Enterprise Architecture Tool) ID</h3>
-                        </div>
-                        <p className="mt-1 text-xs text-gray-500">
-                          BEAT ID is a unique identifier for your application, which is used for application and technology portfolio management.
-                        </p>
-                        <p className="mt-2 text-sm">
-                          {beatId ? beatId : 'No BEAT ID specified'}
-                        </p>
-                      </div>
-                      
                       {selectedCapabilities.length > 0 ? (
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -2581,6 +2567,20 @@ const TeamSetupPage: React.FC = () => {
                       ) : (
                         <p className="text-gray-500">No business capabilities selected.</p>
                       )}
+                      
+                      {/* BEAT ID in Preview */}
+                      <div className="bg-gray-50 p-4 rounded-lg mt-4">
+                        <div className="flex items-center">
+                          <Hash className="h-4 w-4 mr-1 text-blue-500" />
+                          <h3 className="text-sm font-medium text-gray-700">BEAT (Bayer Enterprise Architecture Tool) ID</h3>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                          BEAT ID is a unique identifier for your application, which is used for application and technology portfolio management.
+                        </p>
+                        <p className="mt-2 text-sm">
+                          {beatId ? beatId : 'No BEAT ID specified'}
+                        </p>
+                      </div>
                     </div>
                     
                     {/* Team Links in Preview */}
