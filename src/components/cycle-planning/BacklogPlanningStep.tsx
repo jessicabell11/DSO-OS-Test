@@ -596,9 +596,6 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
     // Reset form
     setShowAddItemForm(null);
   };
-  
-  // Check if we have enough items in the upcoming cycle to proceed
-  const canProceed = upcomingCycleItems.length > 0;
 
   // Get all epics for dropdown selection
   const allEpics = getAllEpics();
@@ -1041,18 +1038,21 @@ const BacklogPlanningStep: React.FC<BacklogPlanningStepProps> = ({
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Innovation Sprint
             </button>
-            <button
-              onClick={onNext}
-              disabled={!canProceed}
-              className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                canProceed 
-                  ? 'bg-blue-600 hover:bg-blue-700' 
-                  : 'bg-gray-300 cursor-not-allowed'
-              }`}
-            >
-              Continue to Team Connections
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </button>
+            <div className="flex items-center">
+              {upcomingCycleItems.length === 0 && (
+                <div className="mr-3 text-sm text-amber-600 flex items-center">
+                  <Lightbulb className="h-4 w-4 mr-1" />
+                  <span>No items in quarterly backlog</span>
+                </div>
+              )}
+              <button
+                onClick={onNext}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+              >
+                Continue to Team Connections
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
